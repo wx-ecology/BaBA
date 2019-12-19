@@ -1,19 +1,17 @@
 ################ Barrier Behavior Analysis (BaBA): classification  ##########################
-# Time: 11272019
-# Description: This is the classification step of BaBA 
 ## Input ##
 # Fence shp, movement points (with the same time intervals since the behavior type assumption 
-# Straighness table 
+# Straighness table generated from step 01
 
 ## output ##
 ## 1. encounter event table; 2. step 1 classification table (bounce/trapped/quick cross); 3. Final classification table
 
 ## data requirement ##
-# Movement coordinates - projected coordinations (m). In this analysis we use 2-hour interval.
-# # ideally, the movement data should not have missing point
-# Fence polylines - as accurate as possible
+# 1. Movement coordinates - projected coordinations (m). X/Y coordinate column name: Easting/Northing. Ideally, the movement data should not the less missing points the better.
+# 2. Fence polylines - as accurate as possible
 
-# Update from v1: seperated step out of a single loop 
+## last updated ##
+# Dec 19, 2019
 
 #############################################################################################
 # ----- libraries -------
@@ -34,36 +32,35 @@ library(doSNOW)
 #########Parameters##########
 #############################s
 target.crs <- "+proj=utm +zone=12 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
-interval <- 2 #define time interval (in hours) of the movement data
 
 ## Fence buffer distance in meters 
-# advised fence buffer distance is the 1st qu. of all points distance to fences
-# there is a seperate script that can calculate distance from all points to fences (Dist2FecneAnalysis_Official)
+# this might be the most important parameter to set the BaBA. 
+# the buffer distance will affect numbers and durations of trajectory. For different species, barrier effect distance might be different. 
+# you can decide the distance either by experience, or testing a range of distance and compare the results.
 FB.dist <- 50
-
-## tolerance parameter. If "a" is point in the buffer, "b" is a buffer outside of the buffer
-# x is the number of b that is allowed in between of a to allow the point series be considered as a continuous encounter event
-# it is more useful for high temporal resolution data
-tolerance <- 0
-
+#define time interval (in hours) of the movement data
+interval <- 2 
 ## parameters after this should be determined by local management requirements and characteristics of the target species.
 # based on the data time interval and animal ecology, maximum encounter duration that you'd call it a "bounce" or "Quick Cross".
-# aka, what is quick for you?
+# aka, what is quick for you? b.hours + interval is the minimum duration that straightness table will calculate
 b.hours <- 4
 b <- b.hours/interval
-# minimum encounter duration in the burst that you'd call the animal might be trapped, thus no classification will be followed.
+# minimum encounter duration in the burst that you'd call the encounter event a "trapped" condition. Must be divisible by interval.
+# aka, what is too long for you? p.hours is also the maximum duration that straightness table will calculate.
 p.hours <- 36
 p <- p.hours/interval
-
 # When differenciating trace/back-n-forth from "normal movement", 
 # we compare the straightness of the encounter event to the average straightness around the time the encounter event happens.
 # how long would you set this window? Current default is 7 days. 
 ave.window <- 7
 half.window <- ave.window/2
-
-# maximum crosses allowed for tracing behavior 
+# Sometimes when barriers are densely distributed, a trace behavior might actually cross some barrier lines with two points are connected together
+# here set the maximum number of crosses allowed for considering a trajectory being tracing behavior 
 max.cross <- 4 
-# 
+# for high temporal interval movement data
+## tolerance parameter. If "a" is point in the buffer, "b" is a point outside of the buffer
+# x is the number of b that is allowed in between of a to allow the point series be considered as a continuous encounter event
+tolerance <- 0
 
 #############################
 #########Functions###########
@@ -99,17 +96,16 @@ min.nonneg <- function(x) min(x[x >= 0])
 #############################
 ######### Set-up ###########
 #############################
-setwd("C:\\Users\\wenjing.xu\\Google Drive\\RESEARCH\\Pronghorn\\Analysis\\FenceBehavior_Official")
+setwd("xxx")
 # prepare spatial dataframe -----------------------------------
-#read in fence data
+#read in fence shapefile
 fence.filename <- 'Fence_AOI_FINAL_Dec2019'
 fence.sp <- readOGR(".", fence.filename)
 #fence.sp <- spTransform(fence.sp,target.crs)
 fence.buffer <- raster::buffer(fence.sp, width=FB.dist)
 
 #read in movement data
-#ideally, the movement data should not have missing point. This trial file does have missing points.
-movement.df.all <- read.csv("Int2_MULE_Raw_Final.csv") 
+movement.df.all <- read.csv("xxx") 
 movement.df.all$date <- as.POSIXct(strptime(as.character(movement.df.all$date),"%Y-%m-%d %H:%M")) #change the format based on the data
 movement.df.all <- movement.df.all <- movement.df.all[(!is.na(movement.df.all$date))&(!is.na(movement.df.all$Easting)),]
 
@@ -123,28 +119,26 @@ for (i in unique(movement.df.all$Location.ID)) {
 xy <- cbind(movement.df.all$Easting, movement.df.all$Northing)
 movement.sp.all <- SpatialPointsDataFrame (coords = xy, data = movement.df.all, proj4string = CRS(target.crs))
 
-# read in straightness table 
-animal.stn.df <- read.csv("I2_MULE_Straightness.csv")
+# read in straightness table from last step
+animal.stn.df <- read.csv("xxx.csv")
 ################################################################################
 # classification step 1: generate encountering event dataframe --------
 
 # for parallel looping 
 cores <- detectCores()
 cl <- makeSOCKcluster(cores[1]-1) #to not overload your computer
-#registerDoParallel(cl)
 registerDoSNOW(cl)
 
 pb <- txtProgressBar(max=100, style=3)
 progress <- function(n) setTxtProgressBar(pb, n)
 opts <- list(progress=progress)
 
-
 encounter.df = foreach (i = unique(movement.df.all$Location.ID), 
                     .combine=rbind,
                     .options.snow=opts,
                     .packages=c('raster', 'sp', 'rgdal', 'rgeos', 'adehabitatLT', 'sp', 'dplyr')) %dopar% { 
                       
-  # ---------------------  build dataframe, burst ID = first timestamp -----------------------------
+  # ---------------------  build dataframe, burst ID = first timestamp of the traj -------------------------
   movement.sp <- movement.sp.all[movement.sp.all$Location.ID == i, ]
   movement.df <- as.data.frame(movement.sp)
   #extract points that fall inside of the buffer 
@@ -191,7 +185,8 @@ close(pb)
 stopCluster(cl)
 
 ################################################################################
-#classification step 2: classify bounce, quick cross, and trap ---------------
+#classification step 2: classify bounce, quick cross, and trap  ---------------
+# because they are all based on duration --------------------------------------
 
 # for parallel looping 
 cores <- detectCores()
@@ -209,13 +204,10 @@ event.df = foreach (
   .combine = rbind,
   .options.snow = opts,
   .packages = c('raster', 'sp', 'rgdal', 'rgeos', 'adehabitatLT', 'sp', 'dplyr')) %dopar% {
-    
+  # focus on the i animal
   movement.df <- as.data.frame(movement.sp.all[movement.sp.all$Location.ID == i,])
   encounter.df.i <- encounter.df[encounter.df$Location.ID == i, ]
-  
-  #------------------------  identify bounce, trapped, and cross, calculating duration and straightess  -------------------------------------
-  # make a dataframe for this animal for layer be joined to the event.df later
-  
+  # empty data frame
   l <- length(unique(encounter.df.i$burst))
   event.df <- data.frame(
       AnimalID = character(l),
@@ -230,7 +222,7 @@ event.df = foreach (
     )
   event.df$burstID <- unique(encounter.df.i$burst)
   event.df$AnimalID <- rep(i, l)
-  
+  # looping through each encounter event
   for (ii in unique(encounter.df.i$burst)) {
     burst.i <- encounter.df.i[encounter.df.i$burst == ii,]
     start.time <- burst.i[1, ]$date
@@ -240,18 +232,20 @@ event.df = foreach (
     event.df[which(event.df$burst == ii), ]$northing <- burst.i$coords.x2[1]
     
     #first for short encounter
-    if (difftime (end.time, start.time, units = "hours") <= b * interval) {  #no more than b*interval H, only spend small amount of time in this burst
+    #no more than b*interval H, only spend small amount of time in this burst
+    if (difftime (end.time, start.time, units = "hours") <= b * interval) { 
       pt.first <- burst.i[1, ] #first point in the burst
       pt.last <- burst.i[nrow(burst.i), ]
-      mov.seg.i <- movement.segment.b(pt.first$ptsID, pt.last$ptsID) #extract movement segment with one point before and one point after the segmentation
-      #here is another measurement that prefer smaller time interval movement data. Big interval data between point distance can misrepresent real trajectory
+      #extract movement segment with one point before and one point after the segmentation
+      mov.seg.i <- movement.segment.b(pt.first$ptsID, pt.last$ptsID) 
       if (nrow(coordinates(mov.seg.i)[[1]][[1]]) <= b) {
         #which means this event is at the end of the individual's traj. Not enough points to tell catagories.
         event.df[which(event.df$burst == ii), ]$eventTYPE <- "unknown"
         next
       }
       int.num <- length(gIntersection(mov.seg.i, fence.sp))
-      ############# Need to acknowledge possibility for mistakes here since the links between points are not real movement routes.
+      ############# Need to acknowledge possibility for mistakes here since the links between points are not real movement routes
+      ############# so the intersecting points might not actually mean crossing.
       if (int.num == 0) {
         event.df[which(event.df$burst == ii), ]$eventTYPE <- "Bounce"
         event.df[which(event.df$burst == ii), ]$cross <- 0
@@ -264,29 +258,28 @@ event.df = foreach (
     
     #next for longer encounter
     else {
-      # all points in the burst into one movement trajectory, calculate intersect with fence lines
+      # all points in the burst into one movement trajectory, calculate intersections with fence lines
       mov.seg.i <- encounter.df.i[which(encounter.df.i$burst == ii), ]
       seg.line.i <- Lines(Line(cbind(mov.seg.i$coords.x1, mov.seg.i$coords.x2)), ID = mov.seg.i$date[1])
       seg.sp.i <- SpatialLines(list(seg.line.i), proj4string = CRS(target.crs))
       int.num <- length(gIntersection(seg.sp.i, fence.sp))
       if (difftime(end.time, start.time, units = "hours") > p * interval) {
-        event.df[which(event.df$burst == ii), ]$eventTYPE <- "Trapped" #sometimes could also be a home ranging behavior. Can be differenciate by time
+        event.df[which(event.df$burst == ii), ]$eventTYPE <- "Trapped" 
         event.df[which(event.df$burst == ii), ]$cross <- int.num
       }
       else {
         # calculating straightness of the encounter event
         straightness <- strtns(mov.seg.i)
         event.df[which(event.df$burst == ii), ]$straightness <- straightness
-        event.df[which(event.df$burst == ii), ]$eventTYPE <- "TBD"
+        event.df[which(event.df$burst == ii), ]$eventTYPE <- "TBD" # these will be further classified in the next loop
         event.df[which(event.df$burst == ii), ]$cross <- int.num
       }
     }
   }
   event.df #this will be attached to the event.df in the "for each" loop
 }
-#event.df.temp <- event.df
-#event.df <- event.df.temp
-write.csv(event.df, paste0("I2_PRON_FB", FB.dist, "_B4_P36_Step1Cls.csv"))
+
+write.csv(event.df, paste0("xxx", FB.dist, "xxx"))
 
 close(pb)
 #stop cluster
@@ -296,14 +289,6 @@ stopCluster(cl)
 ################################################################################
 # classification step 3: classify back-n-forth and trace -----------------------
 # based on comparing average straightness around the encounter event -----------
-
-#animal.stn.df <- read.csv(paste0(getwd(), "I2_all_Straightness.csv"))
-#animal.stn.df$Date <- as.POSIXct(strptime(as.character(animal.stn.df$Date),"%Y-%m-%d %H:%M"))
-
-#event.df <- read.csv(paste0(getwd(), "I2_All_FB180_B4_P36_Step1Cls.csv"))
-#event.df$Date <- as.POSIXct(strptime(as.character(event.df$burstID),"%Y-%m-%d %H:%M"))
-#event.df$eventTYPE <- as.character(event.df$eventTYPE)
-#event.df[is.na(event.df$eventTYPE),]$eventTYPE <- "unknown"
 
 for (i in 1:nrow(event.df)) {
   if (event.df[i,]$eventTYPE == "TBD") {
@@ -342,5 +327,5 @@ for (i in 1:nrow(event.df)) {
   }
 }
 event.df.1 <- event.df
-write.csv(event.df.1, paste0("I2_PRON_FB", FB.dist, "_B4_P36_FinalCls.csv"))
+write.csv(event.df.1, paste0("xxx", FB.dist, "xxx"))
 
