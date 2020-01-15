@@ -12,7 +12,7 @@
 # Dec 19, 2019
 
 ###############################################################################
-o
+
 
 # Set up the R session ------------------------------------------------------------------
 
@@ -41,9 +41,9 @@ setwd(".")
 
 ## define input and ouput paths ####
 
-input_file_path <- "C:/Users/HerrmannV/Downloads/PRONG_TEST.csv" # path to your movement data (relative to your working directory)
+input_file_path <- "data/PRONG_TEST.csv" # path to your movement data (relative to your working directory)
 
-ouput_file_path <- "straigthness_output" # path you want your output data to be saved at (relative to your worling directory)
+ouput_file_path <- "results/straigthness_output.csv" # path you want your output data to be saved, including .csv extension (relative to your working directory)
 
 ## define the CRS of your data ####
 target.crs <- "+proj=utm +zone=12 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
@@ -133,4 +133,4 @@ system.time(for (i in unique(movement.df.all$Location.ID)) {
 
 # Save output -------------------------------------------------------------
 
-write.csv(animal.stn.df, paste0(getwd(), ouput_file_path), row.names = F)
+write.csv(animal.stn.df, paste(getwd(), ouput_file_path, sep = "/"), row.names = F)
