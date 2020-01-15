@@ -37,7 +37,7 @@ library(adehabitatLT)
 setwd(".")
 
 
-# Parameters --------------------------------------------------------------
+# Set up Parameters Parameters --------------------------------------------------------------
 
 ## define input and ouput paths ####
 
@@ -48,7 +48,7 @@ ouput_file_path <- "results/straigthness_output.csv" # path you want your output
 ## define the CRS of your data ####
 target.crs <- "+proj=utm +zone=12 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
-## define BaBA paramenters ####
+## define BaBA parameters ####
 
 # define time interval (in hours) of the movement data
 interval <- 2 
