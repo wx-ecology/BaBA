@@ -412,7 +412,12 @@ for (i in 1:nrow(event.df)) {
       lower <-
         mean(Animal.str.i.subset$Straightness) - sd(Animal.str.i.subset$Straightness)
       if (event.df[i, ]$straightness < lower) {
+        if (event.df[i, ]$cross  < max.cross) {
         event.df[i, ]$eventTYPE <- "Back-n-forth"
+        }
+        else {
+          event.df[i, ]$eventTYPE <- "unknown"
+        }
       } else if (event.df[i, ]$straightness > upper) {
         if (event.df[i, ]$cross  < max.cross) {
           event.df[i, ]$eventTYPE <- "Trace"
