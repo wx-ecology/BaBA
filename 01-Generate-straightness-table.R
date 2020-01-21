@@ -104,7 +104,7 @@ movement.df.all <- movement.df.all[(!is.na(movement.df.all$date))&(!is.na(moveme
 # Analysis ----------------------------------------------------------------
 
 # create an empty dataframe 
-animal.stn.df <- data.frame(AnimalID = integer(), window.size = numeric(), Date = character(), Straightness = numeric())
+animal.stn.df <- data.frame(AnimalID = integer(), window.extent = numeric(), Date = character(), Straightness = numeric())
 
 # run a for loop for each individual
 system.time(for (i in unique(movement.df.all$Location.ID)) {
@@ -125,7 +125,7 @@ system.time(for (i in unique(movement.df.all$Location.ID)) {
     }
     
     n <- length(straightness.ii)
-    rows.i <- data.frame(AnimalID = rep(i, n), window.size = rep(ii, n), Date = date.ii, Straightness = straightness.ii)
+    rows.i <- data.frame(AnimalID = rep(i, n), window.extent = rep(ii, n), Date = date.ii, Straightness = straightness.ii)
     animal.stn.df <- rbind(animal.stn.df, rows.i)
   }
 })

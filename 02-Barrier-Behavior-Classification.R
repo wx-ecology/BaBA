@@ -84,7 +84,7 @@ p <- p.hours / interval
 
 #### When differenciating trace/back-n-forth from "normal movement",
 # we compare the straightness of the encounter event to the average straightness around the time the encounter event happens.
-# how long would you set this window? Current default is 7 days.
+# window. extent. how long would you set this window? Current default is 7 days.
 ave.window <- 7
 half.window <- ave.window / 2
 
@@ -382,7 +382,7 @@ for (i in 1:nrow(event.df)) {
     Animal.str.i <-
       animal.stn.df[(
         animal.stn.df$AnimalID == event.df[i, ]$AnimalID &
-          animal.stn.df$window.size == event.df[i, ]$duration / interval
+          animal.stn.df$window.extent == event.df[i, ]$duration / interval
       ), ]
     date.i <- event.df[i, ]$burstID
     straightness.i <- event.df[i, ]$straightness
