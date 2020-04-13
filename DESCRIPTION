@@ -8,10 +8,6 @@ Description: The function opf this package tries to classify
 animal movement behaviors near barriers into 7 different categories: 
 Bounce, Quick Cross, 
 Back-and-forth, Trace, Trap, Average Movement and  unknown.
-Imports:
-    rgdal,
-    rgeos,
-    adehabitatLT
 License: MIT
 Encoding: UTF-8
 LazyData: true
