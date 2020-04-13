@@ -253,7 +253,7 @@ strtns <- function(mov_seg) {
 
 
   # calculate trajectory
-  traj <- as.ltraj(xy = coordinates(mov_seg), date = mov_seg$date, id = as.character(mov_seg$Location.ID))
+  traj <- adehabitatLT::as.ltraj(xy = coordinates(mov_seg), date = mov_seg$date, id = as.character(mov_seg$Location.ID))
 
   #moving distance from first pt to last pt in the burst
   traj.dist <- sqrt(
