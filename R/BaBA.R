@@ -76,7 +76,7 @@ BaBA <- function(animal, barrier, d = 50, interval = 2, b_hours = 4, p_hours = 3
       mov_seg_i <- movement.segment.b(animal_i, pt.first, pt.last)
 
       # count the number of crossing ####
-      int.num <- length(gIntersection(mov_seg_i, barrier))
+      int.num <- length(rgeos::gIntersection(mov_seg_i, barrier))
 
       # if no crossing and we didn't have both points (before and after), then we can't tell if it crossed
       if (int.num == 0 & nrow(coordinates(mov_seg_i)[[1]][[1]]) != (nrow(encounter_i)+2)) {
