@@ -84,7 +84,7 @@ data("pronghorn")
 data("fences")
 
 
-results_pron <- BaBA(animal = pronghorn, barrier = fences, interval = 2, b_hours = 4, p.hours = 36, d = 110, max.cross = 4, exclude_buffer = T, w = 7, img_suffix = "PRON")
+results_pron <- BaBA(animal = pronghorn, barrier = fences, interval = 2, b_hours = 4, p_hours = 36, d = 110, max_cross = 4, exclude_buffer = T, w = 7, img_suffix = "PRON")
 
 
 View(results_pron$classification)
