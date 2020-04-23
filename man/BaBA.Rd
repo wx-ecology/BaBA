@@ -34,15 +34,14 @@ Maximum encounter duration, in hours, that an event would be considered as a 'sh
 Minimum encounter duration, in hours, that an event would be consiered as a "trapped" condition. Must be divisible by \code{interval}.
 }
 \item{w}{
-Number of days before the first location and after the last one of an encounter event to determine a time period where a moving window method is applied to calculate average movement straightness. The average straightness will be used to compare to the straightness of the focal encounter event in order to deterimine whether the event is 'trace', 'back-n-forth', or 'normal movement'. Note that the average straightness is calculated on all movement segments of the same duration of the encounter event, within the window frame set here, befaore and after the encounter.}
-
-\item{max_cross}{Maximum number of crosses allowed for in tracing behavior. Sometimes, depending on the shape of the barrier and the time interval, the straight segments between locations might appear to be crossing the barrier while the locations are actually always on the same side of the barrier. This parameter allows some crossing to happen in the 'trace' behavior.
+Number of days before the first location and after the last one of an encounter event to determine a time period where a moving window method will be applied to calculate average movement straightness. The average straightness will be used to compare to the straightness of the focal encounter event in order to deterimine whether the event is 'trace' (more straightness than average), 'back-n-forth' (less straight than average), or 'normal movement' (similar to average). Note that the average straightness is calculated on all movement segments of the same duration of the encounter event within the time window set here, which include movement segments both within and outside of the barrier buffers. Use \code{exclude_buffer} to indicate whether or not to include movement locations inside barrier buffers.}
+\item{max_cross}{Maximum number of crosses allowed for in tracing behavior. Sometimes, depending on the shape of the barrier and temporal interval of movement data, the straight segments between movement locations might appear to be crossing the barrier even if the locations are actually on the same side of the barrier. This parameter allows some crossings to be included in the 'trace' behavior.
 }
 \item{tolerance}{
 not used.
 }
 \item{exclude_buffer}{
-\code{Logical}. When considreing the average movement straightness looking at movement segments \code{w} days before and \code{w} days after the encoutner event, should locations within the buffer but from different encounter events be excluded? default is \code{TRUE} but you might consider changing this to \code{FALSE} if you have a very dense barriers and not enough continuous locations within the time window and outside of buffer (You would know that if you had a lot of 'unkown' classifications for events of medium durations.
+\code{Logical}. When calculating average movement straightness, we consider movement segments \code{w} days before and \code{w} days after the focal encoutner event, which can include movement locations within and outside of barrier buffers. Should movement location within the buffer be excluded? default is \code{TRUE}, but you might consider changing this to \code{FALSE} if the barriers are relatively dense and animals fall in barrier buffers all the time and not enough continuous locations within the time window are outside of buffer (You would know that if you had a lot of 'unkown' classifications for events of medium durations.
 }
 \item{export_images}{
 \code{logical}. If \code{TRUE,} will export snapshot of event locations as \code{.png} files named with the classification of the event, the \code{LocationID} of the animal, the \code{burstID} of the event and and potential suffix specified by argument \code{export_suffix}.
@@ -65,10 +64,11 @@ When \code{export_images} is \code{TRUE}, the \code{character} name of the folde
 %% ...
 }
 \references{
-%% ~put references to the literature/web site here ~
+Xu, W., Nandintsetsegm D., Herrmann, V., Sawyer, H., Middleton, A. (n.d.). Through the Devil's Rope: 
+Barrier behavior analysis guides fencing modification prioritizations for wide-ranging ungulates
 }
 \author{
-%%  ~~who you are~~
+Wenjing Xu and Valentine Herrmann
 }
 \note{
 %%  ~~further notes~~
@@ -90,7 +90,7 @@ results_pron <- BaBA(animal = pronghorn, barrier = fences, interval = 2, b_hours
 
 View(results_pron$classification)
 View(results_pron$encounters@data)
-plot(results_mule$encounters)
+plot(results_pron$encounters)
 
 # write the encounters as shapefile
 writeOGR(results_pron$encounters, ".", "encountersPRON", driver = "ESRI Shapefile", overwrite_layer = T)
