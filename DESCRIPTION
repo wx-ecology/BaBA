@@ -6,6 +6,8 @@ Author: Wenjing Xu and Valentine Herrmann
 Maintainer: The package maintainer <wenjing.xu@berkeley.edu> and <herrmannV@si.edu>
 Description: The function opf this package tries to classify animal movement behaviors near barriers into 7 different categories: Bounce, Quick Cross, Back-and-forth, Trace, Trap, Average Movement and  unknown.
 Imports:
+    raster,
+    sp,
     rgdal,
     rgeos,
     adehabitatLT

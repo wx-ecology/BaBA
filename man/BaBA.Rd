@@ -5,7 +5,7 @@
 Barrier Behavior Analysis (BaBA)
 }
 \description{
-This function classifies movement behaviors near barriers into 7 different categories: Bounce, Quick Cross, Back-and-forth, Trace, Trap, Average Movement and  unknown.
+This function classifies animal movement near linear barriers into 7 different behavioral categories: Bounce, Quick Cross, Back-and-forth, Trace, Trap, Average Movement and  unknown.
 }
 \usage{
 BaBA(animal, barrier, d = 50,
@@ -19,22 +19,23 @@ w = 7, max_cross = 4, tolerance = 0, exclude_buffer = T,
 \code{SpatialPointsDataFrame} of animal movement with a field that identifies each idvidual: \code{Location.ID}, a \code{date} column in \code{POSIXct} format. \code{CRS} has to be the same as \code{barrier}.
 }
 \item{barrier}{
-\code{SpatialLinesDataFrame} with the locations of all known barriers in the area covered by \code{animal} movement data. In the same spatial projection as \code{animal}.
+\code{SpatialLinesDataFrame} showing barrier locations in the area overlapped with \code{animal} movement data. In the same spatial projection as \code{animal}.
 }
-\item{d}{ Barrier buffer in meters. Distance on either side of barrier lines within which an animal location/trajectory is considered to be potentially affected by the presence of the barrier. This might be the most important parameter to set the BaBA. The buffer distance will affect numbers and durations of trajectories identified as 'events'. For different species, barrier effect distance might be different. You can decide the distance either by experience, or testing a range of distance and compare the results.
+\item{d}{ Barrier buffer size in meters. Distance on either side of barrier lines within which animal movement is potentially affected by the presence of the barrier. This might be the most important parameter to set the BaBA. The buffer distance will affect numbers and durations of trajectories identified as 'encounter events'. For species with different movement capacities or ecological attributes, barrier effect distance might be different. You can decide the distance either by a priori knowledge, or testing a range of distance and compare the results.
 }
 \item{interval}{
 Time interval (in hours) of the movement data.
 }
 \item{b_hours}{
-Maximum encounter duration, in hours, that would be considered as a 'short encounter' ('Bounce' or 'Quick Cross'). Aka, what is quick for you? Must be divisible by \code{interval}
+Maximum encounter duration, in hours, that an event would be considered as a 'short encounter' ('Bounce' or 'Quick Cross'). Must be divisible by \code{interval}
 
 }
 \item{p_hours}{
-Minimum encounter duration, in hours, that you'd call the encounter event a "trapped" condition. Aka, what is too long for you? Must be divisible by \code{interval}.
+Minimum encounter duration, in hours, that an event would be consiered as a "trapped" condition. Must be divisible by \code{interval}.
 }
 \item{w}{
-Number of days before the first location of the event and  and after the last one to consider when differenciating 'trace', 'back-n-forth' from 'normal movement'. We compare the straightness of the encounter event to the average straightness around the time the encounter event happens. How long would you set this window? Note that the average straightness is calculated on all movement segments of the same duration of the encounter event, within the window frame set here, befaore and after the encounter.}
+Number of days before the first location and after the last one of an encounter event to determine a time period where a moving window method is applied to calculate average movement straightness. The average straightness will be used to compare to the straightness of the focal encounter event in order to deterimine whether the event is 'trace', 'back-n-forth', or 'normal movement'. Note that the average straightness is calculated on all movement segments of the same duration of the encounter event, within the window frame set here, befaore and after the encounter.}
+
 \item{max_cross}{Maximum number of crosses allowed for in tracing behavior. Sometimes, depending on the shape of the barrier and the time interval, the straight segments between locations might appear to be crossing the barrier while the locations are actually always on the same side of the barrier. This parameter allows some crossing to happen in the 'trace' behavior.
 }
 \item{tolerance}{
