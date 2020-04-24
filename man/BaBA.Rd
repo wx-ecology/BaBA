@@ -64,7 +64,7 @@ When \code{export_images} is \code{TRUE}, the \code{character} name of the folde
 %% ...
 }
 \references{
-Xu, W., Nandintsetsegm D., Herrmann, V., Sawyer, H., Middleton, A. (n.d.). Through the Devil's Rope: 
+Xu, W., Nandintsetsegm D., Sawyer, H., Herrmann, V., Middleton, A. (n.d.). Through the Devil's Rope: 
 Barrier behavior analysis guides fencing modification prioritizations for wide-ranging ungulates
 }
 \author{
