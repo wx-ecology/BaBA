@@ -4,6 +4,12 @@ BaBA <- function(animal, barrier, d = 50, interval = 2, b_hours = 4, p_hours = 3
     if(!dir.exists(img_path)) dir.create(img_path)
   }
   # prepare parameters ####
+  if(is.null(interal)) { # figure out interval (as the most frequent difference in timestamp) if not provided but give an error if not the same for all individuals
+    interval_per_individual <- tapply(animal$date, animal$Location.ID, function(x) names(which.max(table(diff(x)))))
+    
+    if(all(interval_per_individual == interval_per_individual[1])) interval <- as.numeric(interval_per_individual[1]) else stop("You did not provide a time interval and not all individuals have been sampled at the same frequency.")
+  }
+  
   b <- b_hours / interval
   p <- p_hours / interval
 
