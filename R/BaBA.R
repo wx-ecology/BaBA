@@ -119,7 +119,7 @@ BaBA <- function(animal, barrier, d = 50, interval = 2, b_hours = 4, p_hours = 3
 
 
       # plot these examples to check later
-      if(export_images) {
+      if(export_images & !classification %in% "TBD") {
         png(paste0(img_path, "/", classification, "_", i, "_", img_suffix, ".png"), width = 6, height = 6, units = "in", res = 90)
         plot(mov_seg_i, main = classification, sub = paste("cross =", int.num, "- duration =", duration))
         plot(barrier_buffer, border = scales::alpha("red", 0.5), add = T)
