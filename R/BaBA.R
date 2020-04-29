@@ -107,7 +107,7 @@ BaBA <- function(animal, barrier, d = 50, interval = 2, b_hours = 4, p_hours = 3
       mov_seg_i <- SpatialLines(list(Lines(Line(coordinates(encounter_i)),                            ID = encounter_i$date[1])), proj4string = CRS(proj4string(animal)))
       int.num <- length(gIntersection(mov_seg_i, barrier))
  ## then check if duration is smaller of bigger than p and classify accordingly
-      if(duration > p*interval) {
+      if(duration > p * interval) {
 
         classification <- "Trapped"
 
@@ -207,9 +207,9 @@ BaBA <- function(animal, barrier, d = 50, interval = 2, b_hours = 4, p_hours = 3
         if (straightness_i > upper) event_df[i, ]$eventTYPE <- ifelse(event_i$cross < max_cross, "Trace", "unknown")
         if(straightness_i >= lower & event_i$straightness <= upper) event_df[i, ]$eventTYPE <- "Average Movement"
       }
-      # else {
-      #   event_df[i, ]$eventTYPE = "unknown"
-      # }
+      else {
+        event_df[i, ]$eventTYPE = "unknown"
+      }
 
 
       # plot to check later ####
