@@ -34,11 +34,14 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
     for(i in unique(encounter$Location.ID)){
 
       encounter_i <- encounter[encounter$Location.ID == i,]
-   ## first get time time difference between all points in the buffer
+   ## first get time difference between all points in the buffer
       encounter_i$timediff <- c(interval, diff(encounter_i$date ))
     ## then remove the interval from that
     encounter_i$timediff2 <-  encounter_i$timediff  - interval
 
+    ## then, for timediff2>0, remove the tolerance, to bring the time diff to 0 if location is within it, and make it part of the same envoutner event
+    encounter_i$timediff2 <- ifelse(encounter_i$timediff2 - as.difftime(tolerance, units = "hours") <= 0, 0, encounter_i$timediff2 - as.difftime(tolerance, units = "hours"))
+    
     ## then do the cum sum of that, and that is the burst ID (with animalID) (since now any same number is from the same burst)
 
     encounter$burstID[encounter$Location.ID == i] <- paste(i, cumsum( encounter_i$timediff2), sep = "_")
@@ -178,7 +181,7 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
       }
 
       # keep only data X days before and X after event
-      animal_i <- animal_i[animal_i$date >= event_i$start_time - as.difftime(w, units = "days") & animal_i$date <= event_i$end_time +  as.difftime(w, units = "days"), ]
+      animal_i <- animal_i[animal_i$date >= event_i$start_time - as.difftime(w/2, units = "days") & animal_i$date <= event_i$end_time +  as.difftime(w/2, units = "days"), ]
 
       # identify continuous sections in the remaining movement data
       animal_i$continuousID <- cumsum(c(interval, diff(animal_i$date)) - interval)
