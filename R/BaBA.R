@@ -1,4 +1,4 @@
-BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours = 36, w = 7, max_cross = 4, tolerance = 0, exclude_buffer = T, export_images = T,img_path = "event_imgs", img_suffix = NULL) {
+BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours = 36, w = 7, max_cross = 4, tolerance = 0, exclude_buffer = F, export_images = T,img_path = "event_imgs", img_suffix = NULL) {
 
   if(export_images) {
     if(!dir.exists(img_path)) dir.create(img_path)
@@ -141,6 +141,7 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
         plot(barrier_buffer, border = scales::alpha("red", 0.5), add = T)
         lines(barrier, col = "red")
         points(encounter_i, pch = 16, col = "blue")
+        points(animal_i[abs(difftime(animal_i$date, start_time, units = "days")) <= 0.5,], type = "o") # one day of data around encounter
         dev.off()
       }
 
@@ -171,6 +172,8 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
         plot(barrier_buffer, border = scales::alpha("red", 0.5), add = T)
         lines(barrier, col = "red")
         points(encounter_i, pch = 16, col = "blue")
+        points(animal_i[abs(difftime(animal_i$date, start_time, units = "days")) <= 0.5,], type = "o") # one day of data around encounter
+        dev.off()
       dev.off()
       }
     }
@@ -213,9 +216,10 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
       # remove points that are inside the buffer if used said so, if not, at least remove the points of the event
       if(exclude_buffer) {
         animal_i <- animal_i[!animal_i$ptsID %in% encounter$ptsID[encounter$Location.ID == event_i$AnimalID], ]
-        } else {
-        animal_i <- animal_i[!animal_i$ptsID %in% encounter$ptsID[encounter$Location.ID == event_i$AnimalID] & encounter$burstID %in% event_i$burstID, ]
-      }
+        } 
+      # else {
+      #   animal_i <- animal_i[!animal_i$ptsID %in% encounter$ptsID[encounter$Location.ID == event_i$AnimalID] & encounter$burstID %in% event_i$burstID, ]
+      # }
 
       # keep only data X days before and X after event
       animal_i <- animal_i[animal_i$date >= event_i$start_time - as.difftime(w/2, units = "days") & animal_i$date <= event_i$end_time +  as.difftime(w/2, units = "days"), ]
@@ -270,6 +274,8 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
         plot(barrier_buffer, border = scales::alpha("red", 0.5), add = T)
       lines(barrier, col = "red")
       points(encounter_i, pch = 16, col = "blue")
+      points(animal_i[abs(difftime(animal_i$date, event_i$start_time, units = "days")) <= 0.5,], type = "o") # one day of data around encounter
+      dev.off()
 dev.off()
 }
       }
