@@ -22,6 +22,7 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
     animal@data$ptsID[animal$Location.ID == i] <-
       seq(nrow(mov.seg.i))
   }
+  
   # create buffer around barrier ----
   barrier_buffer <- raster::buffer(barrier, width = d)
 
@@ -31,6 +32,7 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
     encounter <- raster::intersect(animal, barrier_buffer)
 
     ## create a burstID ----
+ 
     for(i in unique(encounter$Location.ID)){
 
       encounter_i <- encounter[encounter$Location.ID == i,]
@@ -38,19 +40,54 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
       encounter_i$timediff <- c(interval, diff(encounter_i$date ))
     ## then remove the interval from that
     encounter_i$timediff2 <-  encounter_i$timediff  - interval
-
-    ## then, for timediff2>0, remove the tolerance, to bring the time diff to 0 if location is within it, and make it part of the same envoutner event
-    encounter_i$timediff2 <- ifelse(encounter_i$timediff2 - as.difftime(tolerance, units = "hours") <= 0, 0, encounter_i$timediff2 - as.difftime(tolerance, units = "hours"))
     
+    
+    ## then, if any timediff2 is >0 but <= tolerance, we need to bring in the missing points from outside the buffer.
+    if(any(encounter_i$timediff2 > 0 & encounter_i$timediff2 <= tolerance)) {
+      
+      idx_pts_of_interest <- which(encounter_i$timediff2 > 0 & encounter_i$timediff2 <= tolerance)
+      
+      for(pt in idx_pts_of_interest) {
+        # find out what pts to fetch
+        ptsID_of_interest_B <- encounter_i$ptsID[pt]
+        ptsID_of_interest_A <- encounter_i$ptsID[pt-1]
+        
+        # fetch the points and add timediff as NA and timediff2 as 0
+        fetched_pt <- animal[animal$Location.ID == i & animal$ptsID > ptsID_of_interest_A & animal$ptsID < ptsID_of_interest_B, ]
+        fetched_pt$timediff <- NA
+        fetched_pt$timediff2 <- 0
+        
+        # replace timediff2 of pts_of_interests to 0
+        encounter_i$timediff2[pt] <- 0
+        
+        # append fetched points to each other 
+        if(pt == idx_pts_of_interest[1]) fetched_pts <- fetched_pt else fetched_pts <- rbind(fetched_pts, fetched_pt)
+        
+      }
+     
+     # append pts and reorder
+      encounter_i <- rbind(encounter_i, fetched_pts)
+      encounter_i <- encounter_i[order(encounter_i$ptsID), ]
+      
+    }
+    
+  
     ## then do the cum sum of that, and that is the burst ID (with animalID) (since now any same number is from the same burst)
+    
+    encounter_i$burstID <- paste(i, cumsum( encounter_i$timediff2), sep = "_")
 
-    encounter$burstID[encounter$Location.ID == i] <- paste(i, cumsum( encounter_i$timediff2), sep = "_")
+    # save into encounter_complete ####
+    if(i == unique(encounter$Location.ID[1])) encounter_complete <- encounter_i else encounter_complete <- rbind(encounter_complete, encounter_i)
 
 
 
   }
 
-
+  encounter <- encounter_complete # save back as encounter (encoutner_complete is bigger as it includes extra points that  are within tolerance)
+   
+  
+    
+  
   ## ---- classification step 2: classify bounce, quick cross, and trap based on duration---- ####
   ### open progress bar ----
   pb <- txtProgressBar( style = 3)
