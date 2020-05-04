@@ -174,7 +174,6 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
         points(encounter_i, pch = 16, col = "blue")
         points(animal_i[abs(difftime(animal_i$date, start_time, units = "days")) <= 0.5,], type = "o") # one day of data around encounter
         dev.off()
-      dev.off()
       }
     }
 
@@ -276,7 +275,6 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
       points(encounter_i, pch = 16, col = "blue")
       points(animal_i[abs(difftime(animal_i$date, event_i$start_time, units = "days")) <= 0.5,], type = "o") # one day of data around encounter
       dev.off()
-dev.off()
 }
       }
   }
