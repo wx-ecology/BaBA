@@ -1,4 +1,4 @@
-BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours = 36, w = 7, max_cross = 4, tolerance = 0, exclude_buffer = F, export_images = T,img_path = "event_imgs", img_suffix = NULL) {
+BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours = 36, w = 7, max_cross = 4, tolerance = 0, sd_multiplier = 1, exclude_buffer = F, export_images = T,img_path = "event_imgs", img_suffix = NULL) {
 
   if(export_images) {
     if(!dir.exists(img_path)) dir.create(img_path)
@@ -250,8 +250,8 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
       #need to make sure there are enough data to calculate average monthly straightness before and after the encounter event
       if(length(straightnesses_i) > 2) {
         # minimum 2 to calculate sd
-        upper <- mean(straightnesses_i) + sd(straightnesses_i)
-        lower <- mean(straightnesses_i) - sd(straightnesses_i)
+        upper <- mean(straightnesses_i) + sd_multiplier * sd(straightnesses_i)
+        lower <- mean(straightnesses_i) - sd_multiplier * sd(straightnesses_i)
         if(straightness_i < lower) event_df[i, ]$eventTYPE <- ifelse(event_i$cross < max_cross, "Back-n-forth", "unknown")
         if (straightness_i > upper) event_df[i, ]$eventTYPE <- ifelse(event_i$cross < max_cross, "Trace", "unknown")
         if(straightness_i >= lower & event_i$straightness <= upper) event_df[i, ]$eventTYPE <- "Average Movement"

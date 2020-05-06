@@ -40,6 +40,9 @@ Number of days to include around the encounter event  to calculate average movem
 \item{tolerance}{
 Maximum duration, in hours, to allow points that are oustide of barrier buffer but between 2 sets of points within the buffer to be included as one long event. Must be divisible by \code{interval}
 }
+\item{sd_multiplier}{
+\code{numeric} value  used to multiply the standard deviation of all straightness measurements caluclated with the moving window method. Any encounter event with straightness > than average straightness + \code{sd_multiplier} * sd straightness will be classified as back-and-forth, < than average straightness - \code{sd_multiplier} * sd straightnessit would be Trace and inbetween would average movement. \deqn{trying equation (to remove)\overline{\rm AB}}. 
+}
 \item{exclude_buffer}{
 \code{Logical}. When calculating average movement straightness, we consider movement segments \code{w} days before and \code{w} days after the focal encoutner event, which can include movement locations within and outside of barrier buffers. Should movement location within the buffer be excluded? default is \code{TRUE}, but you might consider changing this to \code{FALSE} if the barriers are relatively dense and animals fall in barrier buffers all the time and not enough continuous locations within the time window are outside of buffer (You would know that if you had a lot of 'unkown' classifications for events of medium durations.
 }
