@@ -248,8 +248,8 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
 
 
       #need to make sure there are enough data to calculate average monthly straightness before and after the encounter event
-      if(length(straightnesses_i) > 2) {
-        # minimum 2 to calculate sd
+      if(length(straightnesses_i) >= ((w*24/interval+1)/2)) {
+        # minimum max number possible/2 to calculate sd
         upper <- mean(straightnesses_i) + sd_multiplier * sd(straightnesses_i)
         lower <- mean(straightnesses_i) - sd_multiplier * sd(straightnesses_i)
         if(straightness_i < lower) event_df[i, ]$eventTYPE <- ifelse(event_i$cross < max_cross, "Back-n-forth", "unknown")
