@@ -140,8 +140,8 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
         plot(mov_seg_i, main = classification, sub = paste("cross =", int.num, "- duration =", duration))
         plot(barrier_buffer, border = scales::alpha("red", 0.5), add = T)
         lines(barrier, col = "red")
+        points(animal_i[abs(difftime(animal_i$date, start_time, units = "days")) <= 0.5,], type = "o") # 1/2 day of data around encounter start
         points(encounter_i, pch = 16, col = "blue", type = "o")
-        points(animal_i[abs(difftime(animal_i$date, start_time, units = "days")) <= 0.5,], type = "o") # one day of data around encounter
         dev.off()
       }
 
@@ -171,8 +171,9 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
         plot(mov_seg_i, main = classification, sub = paste("cross =", int.num, "- duration =", duration))
         plot(barrier_buffer, border = scales::alpha("red", 0.5), add = T)
         lines(barrier, col = "red")
+        points(animal_i[abs(difftime(animal_i$date, start_time, units = "days")) <= 0.5,], type = "o") # 1/2 day of data around encounter start
         points(encounter_i, pch = 16, col = "blue", type = "o")
-        points(animal_i[abs(difftime(animal_i$date, start_time, units = "days")) <= 0.5,], type = "o") # one day of data around encounter
+       
         dev.off()
       }
     }
@@ -273,8 +274,9 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
            main = event_df[i, ]$eventTYPE, sub = paste("cross = ", event_df[i, ]$cross, ", duration =", event_df[i, ]$duration, ", stri =", round(straightness_i, 2), ", str_mean = ",  round(mean(straightnesses_i), 2), ", str_sd = ",  round(sd(straightnesses_i), 2)))
         plot(barrier_buffer, border = scales::alpha("red", 0.5), add = T)
       lines(barrier, col = "red")
+      points(animal[animal$Location.ID == event_i$AnimalID & abs(difftime(animal$date, event_i$start_time, units = "days")) <= 0.5, ], type = "o")# 1/2 day of data around encounter strat
       points(encounter_i, pch = 16, col = "blue", type = "o")
-      points(animal_i[abs(difftime(animal_i$date, event_i$start_time, units = "days")) <= 0.5,], type = "o") # one day of data around encounter
+     
       dev.off()
 }
       }
