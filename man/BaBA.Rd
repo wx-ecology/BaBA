@@ -5,7 +5,7 @@
 Barrier Behavior Analysis (BaBA)
 }
 \description{
-This function classifies animal movement near linear barriers into 7 different behavioral categories: Bounce, Quick Cross, Back-and-forth, Trace, Trap, Average Movement and  unknown.
+This function classifies animal movement near linear barriers into 6 different behavioral categories: quick cross, average movement, bounce, back-and-forth, trace, and trapped.
 }
 \usage{
 BaBA(animal, barrier, d = 50,
