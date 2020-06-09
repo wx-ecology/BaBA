@@ -1,8 +1,8 @@
 # Barrier Behavior Analysis
 ## Description
-Script for Barrier Behavior Analysis (BaBA). This analysis is to identify and classify animal movement behavior upon encountering with linear barriers (e.g. roads, fences, pipelines, rivers).
+Barrier Behavior Analysis (BaBA)is a spatial- and temporal-explicit method to identify and classify barrier behaviors, fence behaviors in our case, based on GPS tracking data and linear spatial features.
 
-The 6 kinds of behaviors that BaBA classifies is: bounce, trace, back-n-forth, average movement, quick cross, trapped, and unknown. See illustration:
+The 6 kinds of behaviors that BaBA classifies is: bounce, trace, back-n-forth, average movement, quick cross, trapped. See illustration:
 ![BaBA catogory classes](BaBA_Catogories.png)
 
 ## Workflow
@@ -11,4 +11,4 @@ The 6 kinds of behaviors that BaBA classifies is: bounce, trace, back-n-forth, a
 ## Relevant publication: 
 Xu, W., Nandintsetseg, D., Herrmann, V., Sawyer, H., Middleton, A. (In prep). Barrier behavior analysis guides fencing mediation prioritizations for wide-ranging animals. In prep.
 
-Last update: May 15, 2020 
+Last update: Jun 9, 2020 
