@@ -3,7 +3,7 @@
 range01 <- function(x){(x-min(x))/(max(x)-min(x))}
 
 # default index_fun is  to calculate the index we used in Scenario 2
-BaRanking <- function(classification = results_pron$classification, barrier = fences, d = 110, index_fun = expression((alt_enc/total_enc)*unique_ind), show_plot = T) {
+BaRanking <- function(classification = results_pron$classification, barrier = fences, d = 110, min_total_enc = 10, index_fun = expression((alt_enc/total_enc)*unique_ind), show_plot = T) {
  
   barrier_sf <- as(barrier, "sf")
   
@@ -42,7 +42,7 @@ BaRanking <- function(classification = results_pron$classification, barrier = fe
   
  
 
-  barrier_sf_joined <- barrier_sf_joined %>% filter(total_enc >= 10) %>% mutate(index = range01(eval(index_fun)))
+  barrier_sf_joined <- barrier_sf_joined %>% filter(total_enc >= min_total_enc) %>% mutate(index = range01(eval(index_fun)))
   
   # put backk into spatial
   barrier_sf_joined <- merge(barrier_sf, barrier_sf_joined, by = "FID_Fence0", all.x = T)

@@ -11,6 +11,7 @@ Ranking of barriers based on the results of the Barrier Behavior Analysis (\code
 BaRanking(classification = results_pron$classification, 
 barrier = fences, 
 d = 110, 
+min_total_enc = 10, 
 index_fun = expression((alt_enc/total_enc)*unique_ind),
 show_plot = T)
 }
@@ -23,6 +24,7 @@ Classification results from the \code{BaBA} function (obtained with \code{$class
   same \code{SpatialLinesDataFrame} representing barrier locations used when running the \code{BaBA} function.
   }
   \item{d}{barrier buffer size used in \code{BaBA} function.}
+  \item{min_total_enc} { minimum number of encounters to consider when calculating ranking index.}
   \item{index_fun}{\code{expression} representing the calculation wished to be used to rank each barrier regarding the number of any encoutner type (\code{Quick_Cross}, \code{Bounce}, \code{unknown}, \code{Average_Movement}, \code{Trace}, \code{Back_n_forth}, \code{Trapped}), the total number of encounters (\code{total_enc} = Bounce + Quick_Cross + Average_Movement + Back_n_forth + Trace + unknown + Trapped), the total number of altered encounters (\code{alt_enc} = Bounce + Back_n_forth + Trace + Trapped) and/or total number of individuals affected (\code{unique_ind}).
   Result of this expression is transformed to range from 0 to 1 using equation: 
   \deqn{function(x){(x-min(x))/(max(x)-min(x))}}
@@ -56,7 +58,7 @@ data(pronghorn)
 
 results_pron <- BaBA(animal = pronghorn, barrier = fences, interval = 2, b_hours = 4, p_hours = 36, d = 110, max_cross = 4, exclude_buffer = T, w = 7, img_suffix = "PRON")
 
-fence_ranking <- BaRanking(classification = results_pron$classification, barrier = fences, d = 110, index_fun = expression((alt_enc/total_enc)*unique_ind))
+fence_ranking <- BaRanking(classification = results_pron$classification, barrier = fences, d = 110, min_total_enc = 10, index_fun = expression((alt_enc/total_enc)*unique_ind))
 
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
