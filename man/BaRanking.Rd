@@ -35,7 +35,14 @@ Classification results from the \code{BaBA} function (obtained with \code{$class
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-
+an object of class \code{sf} and \code{data.frame} containing one row per fence ID, and columns with information on:
+\item{unique_ind}{number of individuals that encountered the barrier.}
+\item{Quick_Cross, Bounce, unknown,
+Avergae_movement, Trace, Back_n_forth,
+Trapped}{total number of the different event types.}
+\item{total_enc}{total number of encounters.}
+\item{alt_enc}{total number of altering-movement encoutners (\code{Bounce + Back_n_forth + Trace + Trapped}).}
+\item{index}{ranking index as calculated by \code{index_fun} and transformed to a scale of 0 to 1.}
 }
 \references{
 %% ~put references to the literature/web site here ~
