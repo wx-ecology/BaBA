@@ -2,7 +2,7 @@
 
 range01 <- function(x){(x-min(x))/(max(x)-min(x))}
 
-# default index_fun is  to calculate the index we used in Scenario 2
+# default index_fun is  to calculate the index we used in the manuscript
 BaRanking <- function(classification = results_pron$classification, barrier = fences, d = 110, min_total_enc = 10, index_fun = expression((alt_enc/total_enc)*unique_ind), show_plot = T) {
  
   barrier_sf <- as(barrier, "sf")
