@@ -16,7 +16,7 @@ w = 7, max_cross = 4, tolerance = 0, sd_multiplier = 1, exclude_buffer = T,
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{animal}{
-\code{SpatialPointsDataFrame} of animal movement with a field that identifies each idvidual: \code{Location.ID}, a \code{date} column in \code{POSIXct} format. \code{CRS} has to be the same as \code{barrier}.
+\code{SpatialPointsDataFrame} of animal movement with a field that identifies each idvidual: \code{Location.ID}, a \code{date} column in \code{POSIXct} format. \code{CRS} has to be the same as \code{barrier}, preferably in projected coordinate system.
 }
 \item{barrier}{
 \code{SpatialLinesDataFrame} showing barrier locations in the area overlapped with \code{animal} movement data. In the same spatial projection as \code{animal}.
