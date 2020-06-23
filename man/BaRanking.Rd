@@ -24,8 +24,8 @@ Classification results from the \code{BaBA} function (obtained with \code{$class
   same \code{SpatialLinesDataFrame} representing barrier locations used when running the \code{BaBA} function. More see details.
   }
   \item{d}{barrier buffer size used in \code{BaBA} function.}
-  \item{min_total_enc} {minimum number of encounters to consider when calculating ranking index. More see details.}
-  \item{index_fun}{\code{expression} expression for quantifying permeability of each barrier. Default is set to be the ratio of counts of altered behavior events (\code{alt_enc} to counts of total encounter events (\code{total_enc}, weighted by numbers of unique individuals interacted with the barriers. Values resulted from the expression will be scaled to 0-1. More in details.
+  \item{min_total_enc}{minimum number of encounters to consider when calculating ranking index. More see details.}
+  \item{index_fun}{\code{expression} expression for quantifying permeability of each barrier. Default is set to be the ratio of counts of altered behavior events (\code{alt_enc} to counts of total encounter events (\code{total_enc}, weighted by numbers of unique individuals interacted with the barriers. Values resulted from the expression will be scaled to 0-1. More in details.}
   \item{show_plot}{\code{logical}, \code{TRUE} if the barrier maps colored by permeability should be printed.}
 }
 \details{
