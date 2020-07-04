@@ -1,4 +1,4 @@
-BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours = 36, w = 7, max_cross = 4, tolerance = 0, sd_multiplier = 1, exclude_buffer = F, export_images = T,img_path = "event_imgs", img_suffix = NULL) {
+BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours = 36, w = 7, max_cross = 4, tolerance = 0, sd_multiplier = 1, exclude_buffer = F, export_images = F, img_path = "event_imgs", img_suffix = NULL) {
 
   if(export_images) {
     if(!dir.exists(img_path)) dir.create(img_path)
