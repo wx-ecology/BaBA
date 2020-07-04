@@ -5,7 +5,7 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
   }
   # prepare parameters ####
   if(is.null(interval)) { # figure out interval (as the most frequent difference in timestamp) if not provided but give an error if not the same for all individuals
-    interval_per_individual <- tapply(animal$date, animal$Location.ID, function(x) names(which.max(table(diff(x)))))
+    interval_per_individual <- tapply(animal$date, animal$Animal.ID, function(x) names(which.max(table(diff(x)))))
     
     if(all(interval_per_individual == interval_per_individual[1])) interval <- as.numeric(interval_per_individual[1]) else stop("You did not provide a time interval and not all individuals have been sampled at the same frequency.")
   }
@@ -17,9 +17,9 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
 
   animal$ptsID <- NA
 
-  for (i in unique(animal$Location.ID)) {
-    mov.seg.i <- animal[animal$Location.ID == i, ]
-    animal@data$ptsID[animal$Location.ID == i] <-
+  for (i in unique(animal$Animal.ID)) {
+    mov.seg.i <- animal[animal$Animal.ID == i, ]
+    animal@data$ptsID[animal$Animal.ID == i] <-
       seq(nrow(mov.seg.i))
   }
   
@@ -33,9 +33,9 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
 
     ## create a burstID ----
  
-    for(i in unique(encounter$Location.ID)){
+    for(i in unique(encounter$Animal.ID)){
 
-      encounter_i <- encounter[encounter$Location.ID == i,]
+      encounter_i <- encounter[encounter$Animal.ID == i,]
    ## first get time difference between all points in the buffer
       encounter_i$timediff <- c(interval, diff(encounter_i$date ))
     ## then remove the interval from that
@@ -53,7 +53,7 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
         ptsID_of_interest_A <- encounter_i$ptsID[pt-1]
         
         # fetch the points and add timediff as NA and timediff2 as 0
-        fetched_pt <- animal[animal$Location.ID == i & animal$ptsID > ptsID_of_interest_A & animal$ptsID < ptsID_of_interest_B, ]
+        fetched_pt <- animal[animal$Animal.ID == i & animal$ptsID > ptsID_of_interest_A & animal$ptsID < ptsID_of_interest_B, ]
         fetched_pt$timediff <- NA
         fetched_pt$timediff2 <- 0
         
@@ -77,7 +77,7 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
     encounter_i$burstID <- paste(i, cumsum( encounter_i$timediff2), sep = "_")
 
     # save into encounter_complete ####
-    if(i == unique(encounter$Location.ID[1])) encounter_complete <- encounter_i else encounter_complete <- rbind(encounter_complete, encounter_i)
+    if(i == unique(encounter$Animal.ID[1])) encounter_complete <- encounter_i else encounter_complete <- rbind(encounter_complete, encounter_i)
 
 
 
@@ -103,7 +103,7 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
 
     # get what we need from the encounter ####
     encounter_i <- encounter[encounter$burstID == i, ]
-    animal_i <- animal[animal$Location.ID == encounter_i$Location.ID[1],]
+    animal_i <- animal[animal$Animal.ID == encounter_i$Animal.ID[1],]
 
     start_time <- encounter_i$date[1]
     end_time <- encounter_i$date[nrow(encounter_i)]
@@ -181,7 +181,7 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
     # save output ####
 
     event_df <- rbind(event_df, data.frame(
-      AnimalID = encounter_i$Location.ID[1],
+      AnimalID = encounter_i$Animal.ID[1],
       burstID = i,
       easting = coordinates(encounter_i)[1, 1],
       northing = coordinates(encounter_i)[1, 2],
@@ -210,15 +210,15 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
       straightness_i <- event_i$straightness
 
       # get movement data of the individual of interest
-      animal_i <- animal[animal$Location.ID == event_i$AnimalID, ]
+      animal_i <- animal[animal$Animal.ID == event_i$AnimalID, ]
       encounter_i <- encounter[encounter$burstID %in% event_i$burstID,]
 
       # remove points that are inside the buffer if used said so, if not, at least remove the points of the event
       if(exclude_buffer) {
-        animal_i <- animal_i[!animal_i$ptsID %in% encounter$ptsID[encounter$Location.ID == event_i$AnimalID], ]
+        animal_i <- animal_i[!animal_i$ptsID %in% encounter$ptsID[encounter$Animal.ID == event_i$AnimalID], ]
         } 
       # else {
-      #   animal_i <- animal_i[!animal_i$ptsID %in% encounter$ptsID[encounter$Location.ID == event_i$AnimalID] & encounter$burstID %in% event_i$burstID, ]
+      #   animal_i <- animal_i[!animal_i$ptsID %in% encounter$ptsID[encounter$Animal.ID == event_i$AnimalID] & encounter$burstID %in% event_i$burstID, ]
       # }
 
       # keep only data X days before and X after event
@@ -274,7 +274,7 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
            main = event_df[i, ]$eventTYPE, sub = paste("cross = ", event_df[i, ]$cross, ", duration =", event_df[i, ]$duration, ", stri =", round(straightness_i, 2), ", str_mean = ",  round(mean(straightnesses_i), 2), ", str_sd = ",  round(sd(straightnesses_i), 2)))
         plot(barrier_buffer, border = scales::alpha("red", 0.5), add = T)
       lines(barrier, col = "red")
-      points(animal[animal$Location.ID == event_i$AnimalID & abs(difftime(animal$date, event_i$start_time, units = "days")) <= 0.5, ], type = "o")# 1/2 day of data around encounter strat
+      points(animal[animal$Animal.ID == event_i$AnimalID & abs(difftime(animal$date, event_i$start_time, units = "days")) <= 0.5, ], type = "o")# 1/2 day of data around encounter strat
       points(encounter_i, pch = 16, col = "blue", type = "o")
      
       dev.off()
@@ -306,7 +306,7 @@ strtns <- function(mov_seg) {
 
 
   # calculate trajectory
-  traj <- adehabitatLT::as.ltraj(xy = coordinates(mov_seg), date = mov_seg$date, id = as.character(mov_seg$Location.ID))
+  traj <- adehabitatLT::as.ltraj(xy = coordinates(mov_seg), date = mov_seg$date, id = as.character(mov_seg$Animal.ID))
 
   #moving distance from first pt to last pt in the burst
   traj.dist <- sqrt(
