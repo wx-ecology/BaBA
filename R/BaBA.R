@@ -281,6 +281,8 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
 }
       }
   }
+  ## clean the encounter spdataframe ##
+  encounter@data <- encounter@data[,c(1,8,2)]
   ## return output as a lits ####
   return(list(encounters = encounter,
               classification = event_df))

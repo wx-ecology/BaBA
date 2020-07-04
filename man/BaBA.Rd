@@ -16,23 +16,23 @@ w = 7, max_cross = 4, tolerance = 0, sd_multiplier = 1, exclude_buffer = T,
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{animal}{
-A **\code{SpatialPointsDataFrame}** of animal movement with a column of \code{Animal.ID} that identifies each individual; a column named \code{date} in \code{POSIXct} format. \code{CRS} has to be the same as \code{barrier}, preferably in projected coordinate system.
+A \code{SpatialPointsDataFrame} of animal movement with a column of \code{Animal.ID} that identifies each individual; a column named \code{date} in \code{POSIXct} format. \code{CRS} has to be the same as \code{barrier}, preferably in projected coordinate system.
 }
 \item{barrier}{
-A **\code{SpatialLinesDataFrame}** showing barrier locations in the area overlapped with \code{animal} movement data. In the same spatial projection as \code{animal}.
+A \code{SpatialLinesDataFrame} showing barrier locations in the area overlapped with \code{animal} movement data. In the same spatial projection as \code{animal}.
 }
 \item{d}{
-Barrier buffer size in meters if  \code{barrier} has a longitude/latitude CRS, in the units of \code{barrier} map otherwise. 
+Barrier buffer size in meters if \code{barrier} has a projected coordinate system CRS, in the units of \code{barrier} map otherwise. 
 }
 \item{interval}{
 Time interval (in hours) of the movement data.
 }
 \item{b_hours}{
-Maximum encounter duration, in hours, that an event would be considered as a 'short encounter' (_'bounce'_ or _'quick cross'_). Must be divisible by \code{interval}
+Maximum encounter duration, in hours, that an event would be considered as a 'short encounter' (\emph{'bounce'} or \emph{'quick cross'}). Must be divisible by \code{interval}
 
 }
 \item{p_hours}{
-Minimum encounter duration, in hours, that an event would be considered as a _'trapped'_ condition. Must be divisible by \code{interval}.
+Minimum encounter duration, in hours, that an event would be considered as a \emph{'trapped'} condition. Must be divisible by \code{interval}.
 }
 \item{w}{
 The number of days to include around the encounter event to calculate average movement straightness using a moving window. Locations included are all locations within \code{w/2} days before the first location of the encounter event and \code{w/2} days after the last location of the event. More see Details.
@@ -44,43 +44,46 @@ The maximum number of crosses allowed for in tracing and back-and-forth behavior
 The maximum duration, in hours, to allow points that are outside of barrier buffer but between 2 sets of points within the buffer to be included as one long event. Useful when movement data has a high temporal resolution. Must be divisible by \code{interval}.
 }
 \item{sd_multiplier}{
-A **\code{numeric}** value to determine the numbers of standard deviations used that defines the normal range of movement straightness. Default is 1. More in Details. 
+A \code{numeric} value to determine the numbers of standard deviations used that defines the normal range of movement straightness. Default is 1. More in Details. 
 }
 \item{exclude_buffer}{
 \code{Logical}. Whether to consider movement locations within barrier buffers when calculating average movement straightness.  
 }
 \item{export_images}{
-**\code{Logical}**. If \code{TRUE,} will export snapshot of event locations as \code{.png} files named with the classification of the event, the \code{LocationID} of the animal, the \code{burstID} of the event and potential suffix specified by argument \code{export_suffix}.
+\code{Logical}. If \code{TRUE,} will export snapshot of event locations as \code{.png} files named with the classification of the event, the \code{LocationID} of the animal, the \code{burstID} of the event and potential suffix specified by argument \code{export_suffix}.
 }
 \item{export_path}{
 When \code{export_images} is \code{TRUE}, the \code{character} name of the folder that the images should be exported to. The folder will be created in the working directory if it does not exist.
 }
 \item{img_suffix}{
-**\code{character}** to be added at the end of the naming if the images are exported when \code{export_images} is \code{TRUE}
+\code{character} to be added at the end of the naming if the images are exported when \code{export_images} is \code{TRUE}
 }
 }
 \details{
 Barrier buffer distance \code{d} represents the distance on both sides of the barrier lines within which animal movement locations are considered 'encounters' with the barrier. This might be the most important parameter to set the BaBA. The buffer distance will affect numbers and durations of trajectories identified as 'encounter events'. For species with different movement capacities or ecological attributes, barrier effect distance might be different. You can decide the distance either by a priori knowledge or testing a range of distance and compare the results.
 
-An average straightness is used to be compared to the straightness of the straightness of a to-be-classified encounter event in order to determine whether the event is _'trace'_ (more straightness than average), _'back-n-forth'_ (less straight than average), or _'normal movement'_ (similar to average). The reason to apply a moving window method with a width of \code{w} to calculate the average straightness is because some animal movements, such as migrations, show great seasonal variations. Moving window method calculates localized average straightness around the time when the to-be-classified encounter event occurs. The default average straightness calculation considers movement segments \code{w/2} days before and after the focal encoutner event, which can include movement locations within and outside of the barrier buffers. One might consider movements within the buffer to have been affected by the barrier and will bias what are considered as _'average movement'_. Use \code{exclude_buffer} to indicate whether or not to include movement locations inside barrier buffers. The default is \code{FALSE} because in the sample data fence density is relatively high and animals fall in barrier buffers all the time. If excluded, not enough continuous locations within the time window would be outside of the buffer.
+An average straightness is used to be compared to the straightness of the straightness of a to-be-classified encounter event in order to determine whether the event is \emph{'trace'} (more straightness than average), \emph{'back-n-forth'} (less straight than average), or \emph{'normal movement'} (similar to average). The reason to apply a moving window method with a width of \code{w} to calculate the average straightness is because some animal movements, such as migrations, show great seasonal variations. Moving window method calculates localized average straightness around the time when the to-be-classified encounter event occurs. The default average straightness calculation considers movement segments \code{w/2} days before and after the focal encoutner event, which can include movement locations within and outside of the barrier buffers. One might consider movements within the buffer to have been affected by the barrier and will bias what are considered as \emph{'average movement'}. Use \code{exclude_buffer} to indicate whether or not to include movement locations inside barrier buffers. The default is \code{FALSE} because in the sample data fence density is relatively high and animals fall in barrier buffers all the time. If excluded, not enough continuous locations within the time window would be outside of the buffer.
 
-The average and standard deviation of straightness measurements calculated by the moving window method are used to define the normal range of movement straightness. Any encounter event with a straightness < (average straightness + \code{sd_multiplier} * sd straightness) would be classified as _'trace'_ (more straight than normal), < (average straightness - \code{sd_multiplier} * sd straightness) would be _'back-and-forth'_ (more tortuous than normal), and in between would be _'average movement'_. To make the standard more strict for an event to be classified as not 'normal' (i.e. _'back-and-forth'_ or _'trace'_), use a larger number for the \code{sd_multiplier}.
+The average and standard deviation of straightness measurements calculated by the moving window method are used to define the normal range of movement straightness. Any encounter event with a straightness < (average straightness + \code{sd_multiplier} * sd straightness) would be classified as \emph{'trace'} (more straight than normal), < (average straightness - \code{sd_multiplier} * sd straightness) would be \emph{'back-and-forth'} (more tortuous than normal), and in between would be \emph{'average movement'}. To make the standard more strict for an event to be classified as not 'normal' (i.e. \emph{'back-and-forth'} or \emph{'trace'}), use a larger number for the \code{sd_multiplier}.
 
-When the barriers are curvy or the temporal resolution of the movement data is coarse, straight lines between movement locations (movement segments) might appear to be crossing the barrier even if the locations are on the same side of the barrier. \code{max_cross} allows some numbers of intersections between movement segments and barriers to be included in the _'trace'_ and _'back-and-forth'_ behavior. When the intersections are larger than \code{max_cross}, the encounter event will be classified as _'unknown'_. 
+When the barriers are curvy or the temporal resolution of the movement data is coarse, straight lines between movement locations (movement segments) might appear to be crossing the barrier even if the locations are on the same side of the barrier. \code{max_cross} allows some numbers of intersections between movement segments and barriers to be included in the \emph{'trace'} and \emph{'back-and-forth'} behavior. When the intersections are larger than \code{max_cross}, the encounter event will be classified as \emph{'unknown'}. 
 
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+\code{BaBA} returns a list.
+\item{$classification}{
+a dataframe. Each row represents one encounter event. \code{AnimalID} is the ID of the individual; \code{burstID} is the ID of the encounter event and it matches the ID of the exported images; \code{easting} and \code{northing} are the coordinates of the starting location of the encounter event; \code{start_time}, \code{end_time}, and \code{duration} describe the temporal characteristics of the encounter event; \code{cross} is the number of intersections between the encounter event trajectory and the barrier; \code{straightness} is the straightness of the encounter event trajectory and is NaN when the encounter event is \emph{'bounce} or \emph{'quick cross'}; finally, \code{eventTYPE} is the barrier behavior classification of the encounter event.
+}
+\item{$encounters}{
+a \code{SpatialPointsDataFrame} showing the locations of encounter events (represented by the starting location).
+}
 }
 \references{
 Xu, W., Nandintsetsegm D., Sawyer, H., Herrmann, V., Middleton, A. (n.d.). Barrier Behavior Analysis (BaBA) reveals extensive effects of fencing on wide-ranging animals. In Review.
 }
 \author{
-%%  ~~authors~~
+Wenjing Xu \email{wenjing.xu@berkeley.edu}
+Valentine Herrmann \email{HerrmannV@si.edu}
 }
 \note{
 %%  ~~further notes~~
