@@ -3,16 +3,20 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
   if(export_images) {
     if(!dir.exists(img_path)) dir.create(img_path)
   }
+  
   # prepare parameters ####
+  interval_per_individual <- tapply(animal$date, animal$Animal.ID, function(x) names(which.max(table(diff(x)))))
   if(is.null(interval)) { # figure out interval (as the most frequent difference in timestamp) if not provided but give an error if not the same for all individuals
-    interval_per_individual <- tapply(animal$date, animal$Animal.ID, function(x) names(which.max(table(diff(x)))))
-    
     if(all(interval_per_individual == interval_per_individual[1])) interval <- as.numeric(interval_per_individual[1]) else stop("time interval not provided and not all individuals have been sampled at the same frequency.")
-  }
+  } else {
+    if (any(as.numeric(interval_per_individual) > interval)) stop("BaBA interval needs to be no smaller than movement data interval") 
+    }
   
   b <- b_hours / interval
   if(b < 1) stop("interval needs to be set no bigger than b_hours")
+  if (round(b) != b) stop("b_hours must be divisible by interval")
   p <- p_hours / interval
+  if (round(p) != p) stop("p_hours must be divisible by interval")
 
   # create point ID by individual ----
 

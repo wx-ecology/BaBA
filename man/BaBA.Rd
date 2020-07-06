@@ -5,12 +5,12 @@
 Barrier Behavior Analysis (BaBA)
 }
 \description{
-This function classifies animal movement near linear barriers into 6 different behavioral categories: quick cross, average movement, bounce, back-and-forth, trace, and trapped. The classification unit of BaBA first identifies \emph{'encounter events'}, defined by a series of continuous locations that fall within the barrier buffers. Each event will then be classified into one of the 6 barrier behaviors.
+This function classifies animal movement near linear barriers into 6 different behavioral categories: quick cross, average movement, bounce, back-and-forth, trace, and trapped. The classification unit of BaBA first identifies \emph{'encounter events'}, defined by a series of continuous locations that fall within the barrier buffers. Each event will then be classified into one of the 6 barrier behaviors. Even though many arguments have default settings, we recommend users adjust these values to best fit the ecology and management goals of the studied species. 
 }
 \usage{
 BaBA(animal, barrier, d,
 interval = 2, b_hours = 4, p_hours = 36,
-w = 7, max_cross = 4, tolerance = 0, sd_multiplier = 1, exclude_buffer = F,
+w = 7, max_cross = 0, tolerance = 0, sd_multiplier = 1, exclude_buffer = F,
  export_images = F, img_path = "event_imgs", img_suffix = NULL)
 }
 %- maybe also 'usage' for other objects documented here.
