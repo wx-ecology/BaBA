@@ -8,7 +8,7 @@ Barrier Behavior Analysis (BaBA)
 This function classifies animal movement near linear barriers into 6 different behavioral categories: quick cross, average movement, bounce, back-and-forth, trace, and trapped. The classification unit of BaBA first identifies \emph{'encounter events'}, defined by a series of continuous locations that fall within the barrier buffers. Each event will then be classified into one of the 6 barrier behaviors.
 }
 \usage{
-BaBA(animal, barrier, d = 50,
+BaBA(animal, barrier, d,
 interval = 2, b_hours = 4, p_hours = 36,
 w = 7, max_cross = 4, tolerance = 0, sd_multiplier = 1, exclude_buffer = F,
  export_images = F, img_path = "event_imgs", img_suffix = NULL)
@@ -25,7 +25,7 @@ A \code{SpatialLinesDataFrame} showing barrier locations in the area overlapped 
 Barrier buffer size in meters if \code{barrier} has a projected coordinate system CRS, in the units of \code{barrier} map otherwise. 
 }
 \item{interval}{
-Time interval (in hours) of the movement data.
+Time interval (in hours) at which movemenet data will be analyzed. It can be larger than the interval of the movement data but has to be no bigger than b_hours. If not specified, BaBA will use the most frequent time difference between steps as \code{interval}. 
 }
 \item{b_hours}{
 Maximum duration, in hours, that an encounter event would be considered as a short event (\emph{'bounce'} or \emph{'quick cross'}). Must be divisible by \code{interval}
@@ -82,7 +82,7 @@ a \code{SpatialPointsDataFrame} showing the locations of encounter events (repre
 Xu, W., Nandintsetsegm D., Sawyer, H., Herrmann, V., Middleton, A. (n.d.). Barrier Behavior Analysis (BaBA) reveals extensive effects of fencing on wide-ranging animals. In Review.
 }
 \author{
-Wenjing Xu \email{wenjing.xu@berkeley.edu}
+Wenjing Xu \email{wenjing.xu@berkeley.edu} 
 Valentine Herrmann \email{HerrmannV@si.edu}
 }
 \note{
@@ -100,14 +100,19 @@ data("pronghorn")
 data("muleDeer")
 data("fences")
 
-
-results_prong <- BaBA(animal = pronghorn, barrier = fences, interval = 2, b_hours = 4, p_hours = 36, d = 110, max_cross = 4, exclude_buffer = T, w = 7, img_suffix = "PRONG")
-results_deer <- BaBA(animal = muleDeer, barrier = fences, interval = 2, b_hours = 4, p_hours = 36, d = 110, max_cross = 4, exclude_buffer = T, w = 7, img_suffix = "DEER")
-
+results_prong <- BaBA(animal = pronghorn, barrier = fences, d = 110)
+# View BaBA results
 View(results_prong$classification)
-plot(results_prong$encounters)
+# plot encounter event locations
+plot(fences)
+plot(results_prong$encounters, add = T)
 
+# export event images to visually check event classifications
+results_deer <- BaBA(animal = muleDeer, barrier = fences, d = 90, export_images = T, img_suffix = "DEER")
+# View BaBA results
 View(results_deer$classification)
+# plot encounter event locations
+plot(fences)
 plot(results_deer$encounters)
 
 # write the encounters as shapefile

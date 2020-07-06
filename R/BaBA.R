@@ -1,4 +1,4 @@
-BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours = 36, w = 7, max_cross = 4, tolerance = 0, sd_multiplier = 1, exclude_buffer = F, export_images = F, img_path = "event_imgs", img_suffix = NULL) {
+BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36, w = 7, max_cross = 0, tolerance = 0, sd_multiplier = 1, exclude_buffer = F, export_images = F, img_path = "event_imgs", img_suffix = NULL) {
 
   if(export_images) {
     if(!dir.exists(img_path)) dir.create(img_path)
@@ -7,10 +7,11 @@ BaBA <- function(animal, barrier, d = 50, interval = NULL, b_hours = 4, p_hours 
   if(is.null(interval)) { # figure out interval (as the most frequent difference in timestamp) if not provided but give an error if not the same for all individuals
     interval_per_individual <- tapply(animal$date, animal$Animal.ID, function(x) names(which.max(table(diff(x)))))
     
-    if(all(interval_per_individual == interval_per_individual[1])) interval <- as.numeric(interval_per_individual[1]) else stop("You did not provide a time interval and not all individuals have been sampled at the same frequency.")
+    if(all(interval_per_individual == interval_per_individual[1])) interval <- as.numeric(interval_per_individual[1]) else stop("time interval not provided and not all individuals have been sampled at the same frequency.")
   }
   
   b <- b_hours / interval
+  if(b < 1) stop("interval needs to be set no bigger than b_hours")
   p <- p_hours / interval
 
   # create point ID by individual ----
