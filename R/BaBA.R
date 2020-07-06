@@ -190,7 +190,7 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
       end_time,
       duration,
       cross = int.num,
-      straightness = straightness_i,
+      straightness = ifelse(classification %in% c("Bounce", "Quick Cross"), NA, straightness_i),
       eventTYPE = classification,
       stringsAsFactors = F
 
