@@ -4,7 +4,11 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
     if(!dir.exists(img_path)) dir.create(img_path)
   }
   
-  # prepare parameters ####
+  # prepare parameters and check input ------
+  if (!(inherits(animal$date, "POSIXct"))) stop("date needs to be 'POSIXct' format")
+  if (!(class(animal)[1] == "SpatialPointsDataFrame")) stop("animal needs to be a SptialPointsDataFrame")
+  if (!(class(barrier)[1] == "SpatialLinesDataFrame")) stop("barrier needs to be a SptialLinesDataFrame")
+  
   interval_per_individual <- tapply(animal$date, animal$Animal.ID, function(x) names(which.max(table(diff(x)))))
   if(is.null(interval)) { # figure out interval (as the most frequent difference in timestamp) if not provided but give an error if not the same for all individuals
     if(all(interval_per_individual == interval_per_individual[1])) interval <- as.numeric(interval_per_individual[1]) else stop("time interval not provided and not all individuals have been sampled at the same frequency.")
@@ -18,7 +22,7 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
   p <- p_hours / interval
   if (round(p) != p) stop("p_hours must be divisible by interval")
 
-  # create point ID by individual ----
+  # create point ID by individual -------
 
   animal$ptsID <- NA
 
