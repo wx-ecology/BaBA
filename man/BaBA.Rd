@@ -112,7 +112,7 @@ results_deer <- BaBA(animal = muleDeer, barrier = fences, d = 90, export_images 
 View(results_deer$classification)
 # plot encounter event locations
 plot(fences)
-plot(results_deer$encounters)
+plot(results_deer$encounters, add = T)
 
 # write the encounters as shapefile
 writeOGR(results_prong$encounters, ".", "encountersPRONG", driver = "ESRI Shapefile", overwrite_layer = T)
