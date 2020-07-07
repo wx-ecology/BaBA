@@ -135,7 +135,7 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
         classification <- "unknown"
 
       } else {
-        classification <- ifelse(int.num == 0, "Bounce", "Quick Cross")
+        classification <- ifelse(int.num == 0, "Bounce", "Quick_Cross")
 
       }
 
@@ -194,7 +194,7 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
       end_time,
       duration,
       cross = int.num,
-      straightness = ifelse(classification %in% c("Bounce", "Quick Cross"), NA, straightness_i),
+      straightness = ifelse(classification %in% c("Bounce", "Quick_Cross"), NA, straightness_i),
       eventTYPE = classification,
       stringsAsFactors = F
 
@@ -258,9 +258,9 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
         # minimum max number possible/2 to calculate sd
         upper <- mean(straightnesses_i) + sd_multiplier * sd(straightnesses_i)
         lower <- mean(straightnesses_i) - sd_multiplier * sd(straightnesses_i)
-        if(straightness_i < lower) event_df[i, ]$eventTYPE <- ifelse(event_i$cross < max_cross, "Back-n-forth", "unknown")
+        if(straightness_i < lower) event_df[i, ]$eventTYPE <- ifelse(event_i$cross < max_cross, "Back_n_forth", "unknown")
         if (straightness_i > upper) event_df[i, ]$eventTYPE <- ifelse(event_i$cross < max_cross, "Trace", "unknown")
-        if(straightness_i >= lower & event_i$straightness <= upper) event_df[i, ]$eventTYPE <- "Average Movement"
+        if(straightness_i >= lower & event_i$straightness <= upper) event_df[i, ]$eventTYPE <- "Average_Movement"
       }
       else {
         event_df[i, ]$eventTYPE = "unknown"

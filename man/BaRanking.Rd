@@ -5,14 +5,14 @@
 Barrier permeability quantification
 }
 \description{
-Examine permeabilities of barrier segments based on the results of the Barrier Behavior Analysis (\code{BaBA})
+Evaluating permeabilities of all barrier segments based on the results of the Barrier Behavior Analysis (\code{BaBA}). Returns a dataframe showing the number of each type of encounter events occured near each barrier segment, as well as the total number of encounter events occurred (\code{total_enc}, and the number of unique individuals (\code{unique_ind}) that encountered each barrier segment). 
 }
 \usage{
-BaRanking(classification = results_pron$classification, 
-barrier = fences, 
-d = 110, 
-min_total_enc = 10, 
-index_fun = expression((alt_enc/total_enc)*unique_ind),
+BaRanking(classification, 
+barrier, 
+d, 
+min_total_enc = 0, 
+index_fun = expression(((Bounce + Back_n_forth + Trace + Trapped)/total_enc) * unique_ind),
 show_plot = T)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -25,7 +25,7 @@ Classification results from the \code{BaBA} function (obtained with \code{$class
   }
   \item{d}{barrier buffer size used in \code{BaBA} function.}
   \item{min_total_enc}{minimum number of encounters to consider when calculating ranking index. More see details.}
-  \item{index_fun}{\code{expression} expression for quantifying permeability of each barrier. Default is set to be the ratio of counts of altered behavior events (\code{alt_enc} to counts of total encounter events (\code{total_enc}, weighted by numbers of unique individuals interacted with the barriers. Values resulted from the expression will be scaled to 0-1. More in details.}
+  \item{index_fun}{\code{expression} for quantifying permeability of each barrier. More in details.}
   \item{show_plot}{\code{logical}, \code{TRUE} if the barrier maps colored by permeability should be printed.}
 }
 \details{
@@ -33,7 +33,7 @@ Classified barrier encounter events will be counted for the barrier segments at 
  
 Depending on animal movement distributions, the fence segments may only be encountered for a few times or even are not encountered by animals at all. In this case, we may not have enough information to accurately quantify permeabilities of such barriers. \code{min_total_enc} is used to eliminate these barriers with insufficient encounter events.  
  
-Depending on management goal and animal ecology/biology, \code{index_fun} can be an expression regarding the number of any encoutner type (\code{Quick_Cross}, \code{Bounce}, \code{unknown}, \code{Average_Movement}, \code{Trace}, \code{Back_n_forth}, \code{Trapped}), the total number of encounters (\code{total_enc} = Bounce + Quick_Cross + Average_Movement + Back_n_forth + Trace + unknown + Trapped), the total number of altered encounters (\code{alt_enc} = Bounce + Back_n_forth + Trace + Trapped) and/or total number of individuals affected (\code{unique_ind}). Result of this expression is scaled to range from 0 to 1 using equation: \deqn{function(x){(x-min(x))/(max(x)-min(x))}}
+Depending on management goal and animal ecology/biology, \code{index_fun} can be an expression regarding the total encounter events \code{total_enc}, the number of unique individuals affected \code{unique_ind}, and the occurence any of the six barrier behaviors (\code{Bounce, Trace, Back_n_forth, Quick_Cross, Avergae_Movement,} or \code{Trapped}) regarding to each barrier segment. Default is set to be the ratio of counts of altered behavior events (Bounce + Back_n_forth + Trace + Trapped) to counts of total encounter events (\code{total_enc}, weighted by numbers of unique individuals interacted with the barriers. Result of this expression is scaled to range from 0 to 1 using equation: \deqn{function(x){(x-min(x))/(max(x)-min(x))}}
 }
 \value{
 an object of class \code{sf} and \code{data.frame} containing one row per fence ID, and columns with information on:
@@ -42,14 +42,13 @@ an object of class \code{sf} and \code{data.frame} containing one row per fence 
 Avergae_movement, Trace, Back_n_forth,
 Trapped}{total counts of the corresponding barrier behavior event type.}
 \item{total_enc}{total number of encounters.}
-\item{alt_enc}{total number of altered-behavior encoutners (\code{Bounce + Back_n_forth + Trace + Trapped}).}
 \item{index}{ranking index as calculated by \code{index_fun} and transformed to a scale of 0 to 1.}
 }
 \references{
-%% ~put references to the literature/web site here ~
+Xu, W., Nandintsetsegm D., Sawyer, H., Herrmann, V., Middleton, A. (n.d.). Barrier Behavior Analysis (BaBA) reveals extensive effects of fencing on wide-ranging animals. In Review.
 }
 \author{
-%%  ~~who you are~~
+Wenjing Xu \email{wenjing.xu@berkeley.edu} and Valentine Herrmann \email{HerrmannV@si.edu}
 }
 \note{
 %%  ~~further notes~~
@@ -64,9 +63,9 @@ Trapped}{total counts of the corresponding barrier behavior event type.}
 data(fences)
 data(pronghorn)
 
-results_pron <- BaBA(animal = pronghorn, barrier = fences, interval = 2, b_hours = 4, p_hours = 36, d = 110, max_cross = 4, exclude_buffer = T, w = 7, img_suffix = "PRON")
+results_prong <- BaBA(animal = pronghorn, barrier = fences, d = 110)
 
-fence_ranking <- BaRanking(classification = results_pron$classification, barrier = fences, d = 110, min_total_enc = 10, index_fun = expression((alt_enc/total_enc)*unique_ind))
+fence_ranking <- BaRanking(classification = results_prong$classification, barrier = fences, d = 110, min_total_enc = 5)
 
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
