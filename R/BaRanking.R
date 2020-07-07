@@ -56,5 +56,4 @@ BaRanking <- function(classification, barrier, d, min_total_enc = 0,
   
   return(barrier_sf_joined)
   
-  
 }

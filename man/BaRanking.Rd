@@ -66,7 +66,7 @@ data(pronghorn)
 results_prong <- BaBA(animal = pronghorn, barrier = fences, d = 110, max_cross = 4)
 
 fence_ranking <- BaRanking(classification = results_prong$classification, barrier = fences, d = 110, min_total_enc = 5)
-
+# from purple to yellow, the impermeability index increases ##
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
