@@ -99,7 +99,7 @@ data("pronghorn")
 data("muleDeer")
 data("fences")
 
-results_prong <- BaBA(animal = pronghorn, barrier = fences, d = 110)
+results_prong <- BaBA(animal = pronghorn, barrier = fences, d = 110, max_cross = 4)
 # View BaBA results
 View(results_prong$classification)
 # plot encounter event locations

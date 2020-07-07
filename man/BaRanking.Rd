@@ -5,7 +5,7 @@
 Barrier permeability quantification
 }
 \description{
-Evaluating permeabilities of all barrier segments based on the results of the Barrier Behavior Analysis (\code{BaBA}). Returns a dataframe showing the number of each type of encounter events occured near each barrier segment, as well as the total number of encounter events occurred (\code{total_enc}, and the number of unique individuals (\code{unique_ind}) that encountered each barrier segment). 
+Evaluating permeabilities of all barrier segments based on the results of the Barrier Behavior Analysis (\code{BaBA}). Returns a dataframe showing the number of each type of encounter events occured near each barrier segment, as well as the total number of encounter events occurred (\code{total_enc}), and the number of unique individuals (\code{unique_ind}) that encountered each barrier segment). 
 }
 \usage{
 BaRanking(classification, 
@@ -63,7 +63,7 @@ Wenjing Xu \email{wenjing.xu@berkeley.edu} and Valentine Herrmann \email{Herrman
 data(fences)
 data(pronghorn)
 
-results_prong <- BaBA(animal = pronghorn, barrier = fences, d = 110)
+results_prong <- BaBA(animal = pronghorn, barrier = fences, d = 110, max_cross = 4)
 
 fence_ranking <- BaRanking(classification = results_prong$classification, barrier = fences, d = 110, min_total_enc = 5)
 
