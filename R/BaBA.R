@@ -157,13 +157,13 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
     }
 
     # classify longer encounters (only trap for now) ########
-    if (duration > b * interval) {
+    if (duration > b_hours) {
 
       ## first calculate number of crossings (without looking at extra points like we did for short encounter)
       mov_seg_i <- SpatialLines(list(Lines(Line(coordinates(encounter_i)),                            ID = encounter_i$date[1])), proj4string = CRS(proj4string(animal)))
-      int.num <- length(gIntersection(mov_seg_i, barrier))
+      int.num <- length(rgeos::gIntersection(mov_seg_i, barrier))
  ## then check if duration is smaller of bigger than p and classify accordingly
-      if(duration > p * interval) {
+      if(duration > p_hours) {
 
         classification <- "Trapped"
 

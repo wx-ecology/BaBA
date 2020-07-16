@@ -25,7 +25,7 @@ A \code{SpatialLinesDataFrame} showing barrier locations in the area overlapped 
 Barrier buffer size in meters if \code{barrier} has a projected coordinate system CRS, in the units of \code{barrier} map otherwise. 
 }
 \item{interval}{
-Time interval (in hours) at which movemenet data will be analyzed. It can be larger than the interval of the movement data but has to be no bigger than b_hours. If not specified, BaBA will use the most frequent time difference between steps as \code{interval}. 
+Time interval (in hours) of the movement data. If not specified, BaBA will use the most frequent time difference between steps as \code{interval}, which might affect result accuracy if the data has irregular time interval or a lot of missing data. 
 }
 \item{b_hours}{
 Maximum duration, in hours, that an encounter event would be considered as a short event (\emph{'bounce'} or \emph{'quick cross'}). Must be divisible by \code{interval}
