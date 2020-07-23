@@ -242,7 +242,7 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
       for(ii in unique(animal_i$continuousID)) {
         animal_ii <- animal_i[animal_i$continuousID == ii, ]
         #duration of period
-        duration_ii <- difftime(animal_ii$date[nrow(animal_ii)], animal_ii$date[1])
+        duration_ii <- difftime(animal_ii$date[nrow(animal_ii)], animal_ii$date[1], units = "hours")
 
         # calculate straigness only if at least as long as encounter event
         if(duration_ii >= duration_i) {
