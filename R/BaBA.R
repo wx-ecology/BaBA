@@ -83,7 +83,7 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
     
     ## then do the cum sum of that, and that is the burst ID (with animalID) (since now any same number is from the same burst)
     
-    encounter_i$burstID <- paste(i, cumsum( encounter_i$timediff2), sep = "_")
+    encounter_i$burstID <- paste(i, cumsum(encounter_i$timediff2), sep = "_")
     
     # save into encounter_complete ####
     if(i == unique(encounter$Animal.ID[1])) encounter_complete <- encounter_i else encounter_complete <- rbind(encounter_complete, encounter_i)
@@ -234,7 +234,7 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
       animal_i <- animal_i[animal_i$date >= event_i$start_time - as.difftime(w/2, units = "days") & animal_i$date <= event_i$end_time +  as.difftime(w/2, units = "days"), ]
 
       # identify continuous sections in the remaining movement data
-      animal_i$continuousID <- cumsum(c(interval, diff(animal_i$date)) - interval)
+      animal_i$continuousID <- cumsum(c(interval, round(diff(animal_i$date, units = "hours"), digits = 1)) - interval)
 
       # for each continuous sections, calculate straigness of all movements lasting the duration of our event (moving window of the size of the encounter)
 
