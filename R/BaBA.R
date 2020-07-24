@@ -1,5 +1,5 @@
 BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36, w = 7, max_cross = 0, tolerance = 0, sd_multiplier = 1, exclude_buffer = F, export_images = F, img_path = "event_imgs", img_suffix = NULL) {
-
+  
   if(export_images) {
     if(!dir.exists(img_path)) dir.create(img_path)
   }
@@ -14,18 +14,18 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
     if(all(interval_per_individual == interval_per_individual[1])) interval <- as.numeric(interval_per_individual[1]) else stop("time interval not provided and not all individuals have been sampled at the same frequency.")
   } else {
     if (any(as.numeric(interval_per_individual) > interval)) stop("BaBA interval needs to be no smaller than movement data interval") 
-    }
+  }
   
   b <- b_hours / interval
   if(b < 1) stop("interval needs to be set no bigger than b_hours")
   if (round(b) != b) stop("b_hours must be divisible by interval")
   p <- p_hours / interval
   if (round(p) != p) stop("p_hours must be divisible by interval")
-
+  
   # create point ID by individual -------
-
+  
   animal$ptsID <- NA
-
+  
   for (i in unique(animal$Animal.ID)) {
     mov.seg.i <- animal[animal$Animal.ID == i, ]
     animal@data$ptsID[animal$Animal.ID == i] <-
@@ -34,19 +34,19 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
   
   # create buffer around barrier ----
   barrier_buffer <- raster::buffer(barrier, width = d)
-
+  
   # ---- classification step 1: generate encountering event dataframe ---- ####
-
-    ## extract points that fall inside the buffer ----
-    encounter <- raster::intersect(animal, barrier_buffer)
-
-    ## create a burstID ----
- 
-    for(i in unique(encounter$Animal.ID)){
-
-      encounter_i <- encounter[encounter$Animal.ID == i,]
-   ## first get time difference between all points in the buffer
-      encounter_i$timediff <- c(interval, diff(encounter_i$date ))
+  
+  ## extract points that fall inside the buffer ----
+  encounter <- raster::intersect(animal, barrier_buffer)
+  
+  ## create a burstID ----
+  
+  for(i in unique(encounter$Animal.ID)){
+    
+    encounter_i <- encounter[encounter$Animal.ID == i,]
+    ## first get time difference between all points in the buffer
+    encounter_i$timediff <- c(interval, round(diff(encounter_i$date, units = "hours"), digits = 1))
     ## then remove the interval from that
     encounter_i$timediff2 <-  encounter_i$timediff  - interval
     
@@ -73,77 +73,77 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
         if(pt == idx_pts_of_interest[1]) fetched_pts <- fetched_pt else fetched_pts <- rbind(fetched_pts, fetched_pt)
         
       }
-     
-     # append pts and reorder
+      
+      # append pts and reorder
       encounter_i <- rbind(encounter_i, fetched_pts)
       encounter_i <- encounter_i[order(encounter_i$ptsID), ]
       
     }
     
-  
+    
     ## then do the cum sum of that, and that is the burst ID (with animalID) (since now any same number is from the same burst)
     
     encounter_i$burstID <- paste(i, cumsum( encounter_i$timediff2), sep = "_")
-
+    
     # save into encounter_complete ####
     if(i == unique(encounter$Animal.ID[1])) encounter_complete <- encounter_i else encounter_complete <- rbind(encounter_complete, encounter_i)
-
-
-
-  }
-
-  encounter <- encounter_complete # save back as encounter (encoutner_complete is bigger as it includes extra points that  are within tolerance)
-   
-  
     
+    
+    
+  }
+  
+  encounter <- encounter_complete # save back as encounter (encoutner_complete is bigger as it includes extra points that  are within tolerance)
+  
+  
+  
   
   ## ---- classification step 2: classify bounce, quick cross, and trap based on duration---- ####
   ### open progress bar ----
   pb <- txtProgressBar( style = 3)
-
+  
   ### create empty object that will hold results ----
   event_df <- NULL
-
+  
   ## run classification procedure for each encounter ####
   for(i in unique(encounter$burstID)) {
-
+    
     # update progressbar
     setTxtProgressBar(pb, which(unique(encounter$burstID) == i)/length(unique(encounter$burstID)))
-
+    
     # get what we need from the encounter ####
     encounter_i <- encounter[encounter$burstID == i, ]
     animal_i <- animal[animal$Animal.ID == encounter_i$Animal.ID[1],]
-
+    
     start_time <- encounter_i$date[1]
     end_time <- encounter_i$date[nrow(encounter_i)]
     duration <-  difftime (end_time, start_time, units = "hours")
     # calculating straightness of the encounter event ###
     ## this will be used for median duration event but is output for reference for other event ####
     straightness_i <- strtns(encounter_i)
-
+    
     # classify short encounters (bounce and quick cross) ####
     #no more than b*interval H, only spend small amount of time in this burst
     if (duration <= b * interval) {
       pt.first <- encounter_i$ptsID[1]#first point in the burst
       pt.last <- encounter_i$ptsID[nrow(encounter_i)]
-
+      
       # extract movement segment with one point before and one point after the segmentation ####
       mov_seg_i <- movement.segment.b(animal_i, pt.first, pt.last)
-
+      
       # count the number of crossing ####
       int.num <- length(rgeos::gIntersection(mov_seg_i, barrier))
-
+      
       # if no crossing and we didn't have both points (before and after), then we can't tell if it crossed
       if (int.num == 0 & nrow(coordinates(mov_seg_i)[[1]][[1]]) != (nrow(encounter_i)+2)) {
         # means that no points were before or after the encounter and we can't tell if the animal crossed
         classification <- "unknown"
-
+        
       } else {
         classification <- ifelse(int.num == 0, "Bounce", "Quick_Cross")
-
+        
       }
-
-# plot these examples to check later
+      
+      # plot these examples to check later
       if(export_images) {
         png(paste0(img_path, "/", classification, "_", i, "_", img_suffix, ".png"), width = 6, height = 6, units = "in", res = 90)
         plot(mov_seg_i, main = classification, sub = paste("cross =", int.num, "- duration =", duration))
@@ -153,27 +153,27 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
         points(encounter_i, pch = 16, col = "blue", type = "o")
         dev.off()
       }
-
+      
     }
-
+    
     # classify longer encounters (only trap for now) ########
     if (duration > b_hours) {
-
+      
       ## first calculate number of crossings (without looking at extra points like we did for short encounter)
       mov_seg_i <- SpatialLines(list(Lines(Line(coordinates(encounter_i)),                            ID = encounter_i$date[1])), proj4string = CRS(proj4string(animal)))
       int.num <- length(rgeos::gIntersection(mov_seg_i, barrier))
- ## then check if duration is smaller of bigger than p and classify accordingly
+      ## then check if duration is smaller of bigger than p and classify accordingly
       if(duration > p_hours) {
-
+        
         classification <- "Trapped"
-
+        
       } else {
-
+        
         classification <- "TBD" # these will be further classified in the next loop
-
+        
       }
-
-
+      
+      
       # plot these examples to check later
       if(export_images & !classification %in% "TBD") {
         png(paste0(img_path, "/", classification, "_", i, "_", img_suffix, ".png"), width = 6, height = 6, units = "in", res = 90)
@@ -182,13 +182,13 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
         lines(barrier, col = "red")
         points(animal_i[abs(difftime(animal_i$date, start_time, units = "days")) <= 0.5,], type = "o") # 1/2 day of data around encounter start
         points(encounter_i, pch = 16, col = "blue", type = "o")
-       
+        
         dev.off()
       }
     }
-
+    
     # save output ####
-
+    
     event_df <- rbind(event_df, data.frame(
       AnimalID = encounter_i$Animal.ID[1],
       burstID = i,
@@ -270,32 +270,33 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
         event_df[i, ]$eventTYPE = "unknown"
         if(is.null(straightnesses_i)) straightnesses_i <- NA # adding this to avoid warning message when ploting.
       }
-
-
+      
+      
       # plot to check later ####
       if(export_images) {
         png(paste0(img_path, "/",  event_df[i, ]$eventTYPE, "_", event_i$burstID, "_", img_suffix, ".png"), width = 6, height = 6, res = 96, units  = "in")
-      A = by(as.data.frame(coordinates(animal_i)), animal_i$continuousID, Line, simplify = T)
-
-      A = SpatialLines(mapply(sp::Lines, A, ID = names(A), SIMPLIFY = F))
-
+        A = by(as.data.frame(coordinates(animal_i)), animal_i$continuousID, Line, simplify = T)
+        
+        A = SpatialLines(mapply(sp::Lines, A, ID = names(A), SIMPLIFY = F))
+        
         plot(A,
-           main = event_df[i, ]$eventTYPE, sub = paste("cross = ", event_df[i, ]$cross, ", duration =", event_df[i, ]$duration, ", stri =", round(straightness_i, 2), ", str_mean = ",  round(mean(straightnesses_i), 2), ", str_sd = ",  round(sd(straightnesses_i), 2)))
+             main = event_df[i, ]$eventTYPE, sub = paste("cross = ", event_df[i, ]$cross, ", duration =", event_df[i, ]$duration, ", stri =", round(straightness_i, 2), ", str_mean = ",  round(mean(straightnesses_i), 2), ", str_sd = ",  round(sd(straightnesses_i), 2)))
         plot(barrier_buffer, border = scales::alpha("red", 0.5), add = T)
-      lines(barrier, col = "red")
-      points(animal[animal$Animal.ID == event_i$AnimalID & abs(difftime(animal$date, event_i$start_time, units = "days")) <= 0.5, ], type = "o")# 1/2 day of data around encounter strat
-      points(encounter_i, pch = 16, col = "blue", type = "o")
-     
-      dev.off()
-}
+        lines(barrier, col = "red")
+        points(animal[animal$Animal.ID == event_i$AnimalID & abs(difftime(animal$date, event_i$start_time, units = "days")) <= 0.5, ], type = "o")# 1/2 day of data around encounter strat
+        points(encounter_i, pch = 16, col = "blue", type = "o")
+        
+        dev.off()
       }
+    }
   }
+  
   ## clean the encounter spdataframe ##
-  encounter@data <- encounter@data[,c(1,8,2)]
+  encounter@data <- encounter@data[,c("Animal.ID","burstID","date")]
   ## return output as a lits ####
   return(list(encounters = encounter,
               classification = event_df))
-  }
+}
 
 
 #increase movement segment by one points before and one point after the focused encounter ####
@@ -304,33 +305,33 @@ movement.segment.b <- function(animal, pt1, pt2) {
                        animal$ptsID <= pt2 + 1, ]
   seg.line <- Lines(Line(coordinates(segments)),
                     ID = segments$date[1])
-
+  
   segments.sp <- SpatialLines(list(seg.line), proj4string = CRS(proj4string(animal)))
-
+  
   return(segments.sp)
 }
 
 
 # calculate straigness of movement segment ####
 strtns <- function(mov_seg) {
-
-
-
+  
+  
+  
   # calculate trajectory
   traj <- adehabitatLT::as.ltraj(xy = coordinates(mov_seg), date = mov_seg$date, id = as.character(mov_seg$Animal.ID))
-
+  
   #moving distance from first pt to last pt in the burst
   traj.dist <- sqrt(
     (traj[[1]]$x[1] - traj[[1]]$x[nrow(traj[[1]])]) * (traj[[1]]$x[1] - traj[[1]]$x[nrow(traj[[1]])]) +
       (traj[[1]]$y[1] - traj[[1]]$y[nrow(traj[[1]])]) * (traj[[1]]$y[1] - traj[[1]]$y[nrow(traj[[1]])])
   )
-
+  
   #sum of all step lengths
   traj.lgth <- sum(traj[[1]]$dist, na.rm = TRUE)
-
+  
   #straightness ranges from 0 to 1. More close to 0 more sinuous it is.
   straightness <- traj.dist/traj.lgth
-
+  
   return(straightness)
 }
 
