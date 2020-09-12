@@ -102,8 +102,10 @@ library(BaBA)
 data("pronghorn")
 data("fences")
 
-# Animal data must be a "SpatialPointsDataFrame" created by the "sp" package
+# Animal data must be a "SpatialPointsDataFrame" created by the "sp" package. 
+# individual ID column should be named "Animal.ID" and timestamp column should be named "date"
 class(pronghorn)
+names(pronghorn)
 
 # run BaBA on the pronghorn data
 results_prong <- BaBA(animal = pronghorn, barrier = fences, d = 110, max_cross = 4)
@@ -121,6 +123,7 @@ writeOGR(results_prong$encounters, ".", "encountersPRONG", driver = "ESRI Shapef
 
 # export event images to visually check event classifications. Using mule deer data as an example:
 data("muleDeer")
+
 results_deer <- BaBA(animal = muleDeer, barrier = fences, d = 90, export_images = T, img_suffix = "DEER")
 writeOGR(results_deer$encounters, ".", "encountersDEER", driver = "ESRI Shapefile", overwrite_layer = T)
 }
