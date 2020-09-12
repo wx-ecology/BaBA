@@ -96,7 +96,6 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
   
   
   
-  
   ## ---- classification step 2: classify bounce, quick cross, and trap based on duration---- ####
   ### open progress bar ----
   pb <- txtProgressBar( style = 3)
@@ -160,7 +159,7 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
     if (duration > b_hours) {
       
       ## first calculate number of crossings (without looking at extra points like we did for short encounter)
-      mov_seg_i <- SpatialLines(list(Lines(Line(coordinates(encounter_i)),                            ID = encounter_i$date[1])), proj4string = CRS(proj4string(animal)))
+      mov_seg_i <- SpatialLines(list(Lines(Line(coordinates(encounter_i)), ID = encounter_i$date[1])), proj4string = animal@proj4string)
       int.num <- length(rgeos::gIntersection(mov_seg_i, barrier))
       ## then check if duration is smaller of bigger than p and classify accordingly
       if(duration > p_hours) {
@@ -308,7 +307,7 @@ movement.segment.b <- function(animal, pt1, pt2) {
   seg.line <- Lines(Line(coordinates(segments)),
                     ID = segments$date[1])
   
-  segments.sp <- SpatialLines(list(seg.line), proj4string = CRS(proj4string(animal)))
+  segments.sp <- SpatialLines(list(seg.line), proj4string = animal@proj4string)
   
   return(segments.sp)
 }
