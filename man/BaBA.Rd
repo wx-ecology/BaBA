@@ -100,7 +100,6 @@ library(BaBA)
 
 # load sample data.
 data("pronghorn")
-data("muleDeer")
 data("fences")
 
 # Animal data must be a "SpatialPointsDataFrame" created by the "sp" package
@@ -120,7 +119,8 @@ plot(results_prong$encounters, add = T)
 writeOGR(results_prong$encounters, ".", "encountersPRONG", driver = "ESRI Shapefile", overwrite_layer = T)
 
 
-# export event images to visually check event classifications. Using mule deer data as an example -
+# export event images to visually check event classifications. Using mule deer data as an example:
+data("muleDeer")
 results_deer <- BaBA(animal = muleDeer, barrier = fences, d = 90, export_images = T, img_suffix = "DEER")
 writeOGR(results_deer$encounters, ".", "encountersDEER", driver = "ESRI Shapefile", overwrite_layer = T)
 }

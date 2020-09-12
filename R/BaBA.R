@@ -90,8 +90,6 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
     # save into encounter_complete ####
     if(i == unique(encounter$Animal.ID[1])) encounter_complete <- encounter_i else encounter_complete <- rbind(encounter_complete, encounter_i)
     
-    
-    
   }
   
   encounter <- encounter_complete # save back as encounter (encoutner_complete is bigger as it includes extra points that  are within tolerance)
