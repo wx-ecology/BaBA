@@ -5,9 +5,11 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
   }
   
   # prepare parameters and check input ------
-  if (!(inherits(animal$date, "POSIXct"))) stop("date needs to be 'POSIXct' format")
   if (!(class(animal)[1] == "SpatialPointsDataFrame")) stop("animal needs to be a SptialPointsDataFrame")
   if (!(class(barrier)[1] == "SpatialLinesDataFrame")) stop("barrier needs to be a SptialLinesDataFrame")
+  if (!"date" %in% names(animal)) stop("please rename the date column to 'date'")
+  if (!"Animal.ID" %in% names(animal)) stop("please rename the individual ID column to 'Animal.ID'")
+  if (!(inherits(animal$date, "POSIXct"))) stop("date needs to be 'POSIXct' format")
   
   interval_per_individual <- tapply(animal$date, animal$Animal.ID, function(x) names(which.max(table( as.numeric(diff(x), units = "hours")))))
   if(is.null(interval)) { # figure out interval (as the most frequent difference in timestamp) if not provided but give an error if not the same for all individuals

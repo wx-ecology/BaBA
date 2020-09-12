@@ -16,7 +16,7 @@ w = 7, max_cross = 0, tolerance = 0, sd_multiplier = 1, exclude_buffer = F,
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{animal}{
-A \code{SpatialPointsDataFrame} of animal movement with a column of \code{Animal.ID} that identifies each individual; a column named \code{date} in \code{POSIXct} format. \code{CRS} has to be the same as \code{barrier}, preferably in projected coordinate system.
+A \code{"SpatialPointsDataFrame"} of animal movement with a column named \code{"Animal.ID"} that identifies each individual; a column named \code{"date"} in \code{"POSIXct"} format. \code{CRS} has to be the same as \code{barrier}, preferably in projected UTM coordinate system.
 }
 \item{barrier}{
 A \code{SpatialLinesDataFrame} showing barrier locations in the area overlapped with \code{animal} movement data. In the same spatial projection as \code{animal}.
@@ -97,27 +97,31 @@ Wenjing Xu \email{wenjing.xu@berkeley.edu} and Valentine Herrmann \email{Herrman
 }
 \examples{
 library(BaBA)
+
+# load sample data.
 data("pronghorn")
 data("muleDeer")
 data("fences")
 
+# Animal data must be a "SpatialPointsDataFrame" created by the "sp" package
+class(pronghorn)
+
+# run BaBA on the pronghorn data
 results_prong <- BaBA(animal = pronghorn, barrier = fences, d = 110, max_cross = 4)
+
 # View BaBA results
 View(results_prong$classification)
+
 # plot encounter event locations
 plot(fences)
 plot(results_prong$encounters, add = T)
 
-# export event images to visually check event classifications
-results_deer <- BaBA(animal = muleDeer, barrier = fences, d = 90, export_images = T, img_suffix = "DEER")
-# View BaBA results
-View(results_deer$classification)
-# plot encounter event locations
-plot(fences)
-plot(results_deer$encounters, add = T)
-
 # write the encounters as shapefile
 writeOGR(results_prong$encounters, ".", "encountersPRONG", driver = "ESRI Shapefile", overwrite_layer = T)
+
+
+# export event images to visually check event classifications. Using mule deer data as an example -
+results_deer <- BaBA(animal = muleDeer, barrier = fences, d = 90, export_images = T, img_suffix = "DEER")
 writeOGR(results_deer$encounters, ".", "encountersDEER", driver = "ESRI Shapefile", overwrite_layer = T)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
