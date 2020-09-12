@@ -224,10 +224,11 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
       animal_i <- animal[animal$Animal.ID == event_i$AnimalID, ]
       encounter_i <- encounter[encounter$burstID %in% event_i$burstID,]
 
-      # remove points that are inside the buffer if used said so, if not, at least remove the points of the event
+      # remove points that are inside the buffer if used said so
       if(exclude_buffer) {
         animal_i <- animal_i[!animal_i$ptsID %in% encounter$ptsID[encounter$Animal.ID == event_i$AnimalID], ]
-        } 
+      } 
+      
       # else {
       #   animal_i <- animal_i[!animal_i$ptsID %in% encounter$ptsID[encounter$Animal.ID == event_i$AnimalID] & encounter$burstID %in% event_i$burstID, ]
       # }
@@ -236,20 +237,21 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
       animal_i <- animal_i[animal_i$date >= event_i$start_time - as.difftime(w/2, units = "days") & animal_i$date <= event_i$end_time +  as.difftime(w/2, units = "days"), ]
 
       # identify continuous sections in the remaining movement data
-      animal_i$continuousID <- cumsum(c(interval, round(diff(animal_i$date, units = "hours"), digits = 1)) - interval)
+      animal_i$continuousID <- cumsum(abs(c(interval, round(diff(animal_i$date, units = "hours"), digits = 1)) - interval)) # sep 11, 2020. added abs() to accomodate potential data points with smaller time intervals
 
       # for each continuous sections, calculate straigness of all movements lasting the duration of our event (moving window of the size of the encounter)
 
       straightnesses_i <- NULL
       for(ii in unique(animal_i$continuousID)) {
         animal_ii <- animal_i[animal_i$continuousID == ii, ]
+        
         #duration of period
         duration_ii <- difftime(animal_ii$date[nrow(animal_ii)], animal_ii$date[1], units = "hours")
 
         # calculate straigness only if at least as long as encounter event
         if(duration_ii >= duration_i) {
-          for(iii in c(1: (which(animal_ii$date > animal_ii$date[nrow(animal_ii)] - as.difftime(duration_i, units = "hours"))[1] -1))) {
-            mov_seg <- animal_ii[iii:(iii+duration_i/interval), ]
+          for(iii in c(1: (which(animal_ii$date > (animal_ii$date[nrow(animal_ii)] - as.difftime(duration_i, units = "hours")))[1] -1))) {
+            mov_seg <- animal_ii[iii:(iii + duration_i/interval), ]
 
             straightnesses_i <- c(straightnesses_i, strtns(mov_seg))
 

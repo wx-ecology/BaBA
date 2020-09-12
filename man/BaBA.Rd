@@ -19,7 +19,7 @@ w = 7, max_cross = 0, tolerance = 0, sd_multiplier = 1, exclude_buffer = F,
 A \code{"SpatialPointsDataFrame"} of animal movement with a column named \code{"Animal.ID"} that identifies each individual; a column named \code{"date"} in \code{"POSIXct"} format. \code{CRS} has to be the same as \code{barrier}, preferably in projected UTM coordinate system.
 }
 \item{barrier}{
-A \code{SpatialLinesDataFrame} showing barrier locations in the area overlapped with \code{animal} movement data. In the same spatial projection as \code{animal}.
+A \code{"SpatialLinesDataFrame"} showing barrier locations in the area overlapped with \code{animal} movement data. In the same spatial projection as \code{animal}.
 }
 \item{d}{
 Barrier buffer size in meters if \code{barrier} has a projected coordinate system CRS, in the units of \code{barrier} map otherwise. 
