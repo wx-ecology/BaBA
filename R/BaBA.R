@@ -1,3 +1,18 @@
+# # for debugging
+# animal = pronghorn
+# barrier = fences
+# d = 0.15
+# interval = NULL
+# b_hours = 4
+# p_hours = 36
+# w = 7
+# max_cross = 0
+# tolerance = 0
+# sd_multiplier = 1
+# exclude_buffer = F
+# export_images = F
+
+
 BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36, w = 7, max_cross = 0, tolerance = 0, sd_multiplier = 1, exclude_buffer = F, export_images = F, img_path = "event_imgs", img_suffix = NULL) {
   
   if(export_images) {
@@ -41,17 +56,21 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
   
   ## extract points that fall inside the buffer ----
   encounter <- raster::intersect(animal, barrier_buffer)
+  if (nrow(encounter) == 0) stop("Barrier buffer distance too small. None of the individuals has overlapping locations with the barrier buffer.")
+  if (sum((unique(encounter$Animal.ID) != unique(animal$Animal.ID))) > 0) {
+    warning("Some individuals are dropped becasue they have no locations overlapped with the barrier buffer" )
+  }
   
   ## create a burstID ----
   
   for(i in unique(encounter$Animal.ID)){
     
     encounter_i <- encounter[encounter$Animal.ID == i,]
+    
     ## first get time difference between all points in the buffer
     encounter_i$timediff <- c(interval, round(diff(encounter_i$date, units = "hours"), digits = 1))
     ## then remove the interval from that
     encounter_i$timediff2 <-  encounter_i$timediff  - interval
-    
     
     ## then, if any timediff2 is >0 but <= tolerance, we need to bring in the missing points from outside the buffer.
     if(any(encounter_i$timediff2 > 0 & encounter_i$timediff2 <= tolerance)) {
@@ -92,8 +111,7 @@ BaBA <- function(animal, barrier, d, interval = NULL, b_hours = 4, p_hours = 36,
     
   }
   
-  encounter <- encounter_complete # save back as encounter (encoutner_complete is bigger as it includes extra points that  are within tolerance)
-  
+  encounter <- encounter_complete # save back as encounter (encoutner_complete is bigger as it includes extra points that are within tolerance)
   
   
   ## ---- classification step 2: classify bounce, quick cross, and trap based on duration---- ####
