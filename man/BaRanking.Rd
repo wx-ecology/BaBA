@@ -11,9 +11,10 @@ Evaluating permeabilities of all barrier segments based on the results of the Ba
 BaRanking(classification, 
 barrier, 
 d, 
+Barrier_ID,
 min_total_enc = 0, 
 index_fun = expression(((Bounce + Back_n_forth + Trace + Trapped)/total_enc) * unique_ind),
-show_plot = T)
+show_plot = F)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -24,6 +25,7 @@ Classification results from the \code{BaBA} function (obtained with \code{$class
   same \code{SpatialLinesDataFrame} representing barrier locations used when running the \code{BaBA} function. More see details.
   }
   \item{d}{barrier buffer size used in \code{BaBA} function.}
+  \item{Barrier_ID}{The column name from the Barrier file that indicate barrier ID.}
   \item{min_total_enc}{minimum number of encounters to consider when calculating ranking index. More see details.}
   \item{index_fun}{\code{expression} for quantifying permeability of each barrier. More in details.}
   \item{show_plot}{\code{logical}, \code{TRUE} if the barrier maps colored by permeability should be printed.}
@@ -60,13 +62,16 @@ Wenjing Xu \email{wenjing.xu@berkeley.edu} and Valentine Herrmann \email{Herrman
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
+# load data
 data(fences)
 data(pronghorn)
 
+# run BaBA function to classify barrier behaviors
 results_prong <- BaBA(animal = pronghorn, barrier = fences, d = 110, max_cross = 4)
 
-fence_ranking <- BaRanking(classification = results_prong$classification, barrier = fences, d = 110, min_total_enc = 5)
-# from purple to yellow, the impermeability index increases ##
+# rank barriers with default evaluation expression
+fence_ranking <- BaRanking(results_prong$classification,fences, 110, "FID_Fence0", min_total_enc = 5, show_plot = T)  
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
