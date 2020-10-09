@@ -21,7 +21,7 @@ BaRanking <- function(classification, barrier, d, Barrier_ID, min_total_enc = 0,
     group_by(!!Barrier_ID, eventTYPE, .drop = F) %>%   
     summarise(count = n(), .groups = 'drop') # The bang-bang operator !! forces a single object. One common case for !! is to substitute an environment-variable (created with <-) with a data-variable (inside a data frame).
   
-  by_type_df <- as.data.frame(by_type) %>% select(!!Barrier_ID, eventTYPE, count) %>% pivot_wider(names_from = eventTYPE, values_from = count) %>% replace(is.na(.), 0)
+  by_type_df <- as.data.frame(by_type) %>% dplyr::select(!!Barrier_ID, eventTYPE, count) %>% pivot_wider(names_from = eventTYPE, values_from = count) %>% replace(is.na(.), 0)
   
   # find out whether all behavioral types are listed and added the column into the dataframe and fill with 0
   if (length(names(by_type_df)) < 8) {
