@@ -9,7 +9,6 @@ The 6 kinds of behaviors that BaBA classifies is: bounce, trace, back-n-forth, a
 ![BaBA workflow](Flowchart.png)
 
 ## Relevant publication: 
-Xu, W., Nandintsetseg, D., Herrmann, V., Sawyer, H., Middleton, A. Barrier behavior analysis guides fencing mediation prioritizations for wide-ranging animals. Journal of Applied Ecology. doi/10.1111/1365-2664.13806
+Xu W, Dejid N, Herrmann V, Sawyer H, Middleton AD. Barrier Behaviour Analysis (BaBA) reveals extensive effects of fencing on wide-ranging ungulates. J Appl Ecol. 2020;00:1–9. https://doi.org/10.1111/1365-2664.13806
 
-Last update: December 12, 2020 
-
+Last update: Jan 11, 2021 
