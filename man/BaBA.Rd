@@ -81,7 +81,7 @@ a \code{SpatialPointsDataFrame} showing the locations of encounter events (repre
 }
 }
 \references{
-Xu, W., Nandintsetsegm D., Sawyer, H., Herrmann, V., Middleton, A. (n.d.). Barrier Behavior Analysis (BaBA) reveals extensive effects of fencing on wide-ranging animals. In Review.
+Xu W, Dejid N, Herrmann V, Sawyer H, Middleton AD. Barrier Behaviour Analysis (BaBA) reveals extensive effects of fencing on wide-ranging ungulates. J Appl Ecol. 2020;00:1–9. https://doi.org/10.1111/1365-2664.13806
 }
 \author{
 Wenjing Xu \email{wenjing.xu@berkeley.edu} and Valentine Herrmann \email{HerrmannV@si.edu}
