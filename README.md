@@ -14,4 +14,4 @@ To install the latest development version of BaBA, in an R session, type:
 ## Relevant publication: 
 Xu W, Dejid N, Herrmann V, Sawyer H, Middleton AD. Barrier Behaviour Analysis (BaBA) reveals extensive effects of fencing on wide-ranging ungulates. J Appl Ecol. 2020;00:1–9. https://doi.org/10.1111/1365-2664.13806
 
-Last update: Jan 11, 2021 
+Last update: April 10, 2021 
