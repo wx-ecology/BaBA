@@ -5,7 +5,7 @@
 # interval = NULL
 # b_time = 4
 # p_time = 36
-# w = 7
+# w = 168
 # units = "hours"
 # max_cross = 0
 # tolerance = 0
@@ -325,7 +325,10 @@ BaBA <-
   
     print("creating dataframe...")
     ## clean the encounter spdataframe ##
+    encounter <- encounter[!duplicated(encounter@data$burstID),]
     encounter@data <- encounter@data[,c("Animal.ID","burstID","date")]
+    encounter@data <- merge(encounter@data, event_df[,c("burstID","eventTYPE")])
+    
     ## return output as a lits ####
     return(list(encounters = encounter,
               classification = event_df))

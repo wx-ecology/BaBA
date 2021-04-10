@@ -9,14 +9,14 @@ This function classifies animal movement near linear barriers into 6 different b
 }
 \usage{
 BaBA(animal, barrier, d,
-interval = 2, b_hours = 4, p_hours = 36,
-w = 7, max_cross = 0, tolerance = 0, sd_multiplier = 1, exclude_buffer = F,
- export_images = F, img_path = "event_imgs", img_suffix = NULL)
+interval, b_time, p_time, w, tolerance, units = c("secs", "mins", "hours", "days", "weeks"),
+max_cross, sd_multiplier, exclude_buffer, 
+export_images, img_path, img_suffix)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{animal}{
-A \code{"SpatialPointsDataFrame"} of animal movement with a column named \code{"Animal.ID"} that identifies each individual; a column named \code{"date"} in \code{"POSIXct"} format. \code{CRS} has to be the same as \code{barrier}, preferably in projected UTM coordinate system.
+A \code{"SpatialPointsDataFrame"} of animal movement with a column named \code{"Animal.ID"} that identifies each individual; a column named \code{"date"} in \code{"POSIXct"} format. \code{CRS} has to be the same as \code{barrier}, preferably in projected UTM coordinate system. More see Details.
 }
 \item{barrier}{
 A \code{"SpatialLinesDataFrame"} showing barrier locations in the area overlapped with \code{animal} movement data. In the same spatial projection as \code{animal}.
@@ -25,23 +25,26 @@ A \code{"SpatialLinesDataFrame"} showing barrier locations in the area overlappe
 Barrier buffer size in meters if \code{barrier} has a projected coordinate system CRS, in the units of \code{barrier} map otherwise. 
 }
 \item{interval}{
-Time interval (in hours) of the movement data. If not specified, BaBA will use the most frequent time difference between steps as \code{interval}, which might affect result accuracy if the data has irregular time interval or a lot of missing data. 
+Time interval of the movement data (unit specified in \code{units}). If not specified, BaBA will use the most frequent time difference between steps as \code{interval}, which might affect result accuracy if the data has irregular time interval or a lot of missing data. 
 }
-\item{b_hours}{
-Maximum duration, in hours, that an encounter event would be considered as a short event (\emph{'bounce'} or \emph{'quick cross'}). Must be divisible by \code{interval}
+\item{b_time}{
+Maximum duration, in the same unit as \code{interval}, that an encounter event would be considered as a short event (\emph{'bounce'} or \emph{'quick cross'}). Must be divisible by \code{interval}
 
 }
-\item{p_hours}{
-Minimum duration, in hours, that an encounter event would be considered as a \emph{'trapped'} condition. Must be divisible by \code{interval}.
+\item{p_time}{
+Minimum duration, in the same unit as \code{interval}, that an encounter event would be considered as a \emph{'trapped'} condition. Must be divisible by \code{interval}.
 }
 \item{w}{
-The number of days to include around the encounter event to calculate average movement straightness using a moving window. Locations included are all locations within \code{w/2} days before the first location of the encounter event and \code{w/2} days after the last location of the event. More see Details.
+The length of time, in the same unit as \code{interval}, to include around the encounter event to calculate average movement straightness using a moving window. Locations included are all locations within \code{w/2} before the first location of the encounter event and \code{w/2} after the last location of the event. More see Details.
+}
+\item{tolerance}{
+The maximum duration, in the same unit as \code{interval}, to allow points that are outside of barrier buffer but between 2 sets of points within the buffer to be included, so that all points are considered as one continous \emph{encounter event}. Useful when movement data has a very high temporal resolution. Must be divisible by \code{interval}.
+}
+\item{units} {
+The temporal units of \code{interval}, \code{b_time}, \code{p_time}, \code{w}, and \code{tolerance}. One of "secs", "mins", "hours", "days", and "weeks".
 }
 \item{max_cross}{
 The maximum number of crosses in an encounter event allowed for in tracing and back-and-forth behavior. More see Details. 
-}
-\item{tolerance}{
-The maximum duration, in hours, to allow points that are outside of barrier buffer but between 2 sets of points within the buffer to be included, so that all points are considered as one continous \emph{encounter event}. Useful when movement data has a very high temporal resolution. Must be divisible by \code{interval}.
 }
 \item{sd_multiplier}{
 A \code{numeric} value to determine the numbers of standard deviations used that defines the normal range of movement straightness. Default is 1. More in Details. 
@@ -60,6 +63,8 @@ When \code{export_images} is \code{TRUE}, the \code{character} name of the folde
 }
 }
 \details{
+\code{BaBA} works better with cleaned \code{animal} dataframe. It is OK to have missing steps but remove repetitive timesteps before running \code{BaBA}.
+
 Barrier buffer distance \code{d} represents the distance on both sides of the barrier lines within which animal movement locations are considered 'encounters' with the barrier, and continuous locations form an \emph{'encounter event'}. This might be the most important parameter to set the BaBA. The buffer distance will affect numbers and durations of trajectories identified as 'encounter events'. For species with different movement capacities or ecological attributes, barrier effect distance might be different. You can decide the distance either by a priori knowledge or testing a range of distance and compare the results.
 
 An average straightness is used to be compared to the straightness of the straightness of a to-be-classified encounter event in order to determine whether the event is \emph{'trace'} (more straightness than average), \emph{'back-n-forth'} (less straight than average), or \emph{'normal movement'} (similar to average). The reason to apply a moving window method with a width of \code{w} to calculate the average straightness is because some animal movements, such as migrations, show great seasonal variations. Moving window method calculates localized average straightness around the time when the to-be-classified encounter event occurs. 
@@ -77,11 +82,11 @@ When the barriers are curvy or the temporal resolution of the movement data is c
 a dataframe. Each row represents one encounter event. \code{AnimalID} is the ID of the individual; \code{burstID} is the ID of the encounter event and it matches the ID of the exported images; \code{easting} and \code{northing} are the coordinates of the starting location of the encounter event; \code{start_time}, \code{end_time}, and \code{duration} describe the temporal characteristics of the encounter event; \code{cross} is the number of intersections between the encounter event trajectory and the barrier; \code{straightness} is the straightness of the encounter event trajectory and is NaN when the encounter event is \emph{'bounce} or \emph{'quick cross'}; finally, \code{eventTYPE} is the barrier behavior classification of the encounter event.
 }
 \item{$encounters}{
-a \code{SpatialPointsDataFrame} showing the locations of encounter events (represented by the starting location).
+a \code{SpatialPointsDataFrame} showing the locations of classified encounter events represented by the starting location.
 }
 }
 \references{
-Xu W, Dejid N, Herrmann V, Sawyer H, Middleton AD. Barrier Behaviour Analysis (BaBA) reveals extensive effects of fencing on wide-ranging ungulates. J Appl Ecol. 2020;00:1–9. https://doi.org/10.1111/1365-2664.13806
+Xu W, Dejid N, Herrmann V, Sawyer H, Middleton AD. Barrier Behaviour Analysis (BaBA) reveals extensive effects of fencing on wide-ranging ungulates. J Appl Ecol. https://doi.org/10.1111/1365-2664.13806
 }
 \author{
 Wenjing Xu \email{wenjing.xu@berkeley.edu} and Valentine Herrmann \email{HerrmannV@si.edu}
@@ -123,7 +128,6 @@ writeOGR(results_prong$encounters, ".", "encountersPRONG", driver = "ESRI Shapef
 # export event images to visually check event classifications. Using mule deer data as an example
 data("muleDeer")
 results_deer <- BaBA(animal = muleDeer, barrier = fences, d = 90, export_images = T, img_suffix = "DEER")
-writeOGR(results_deer$encounters, ".", "encountersDEER", driver = "ESRI Shapefile", overwrite_layer = T)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
