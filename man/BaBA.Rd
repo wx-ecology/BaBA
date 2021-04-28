@@ -9,9 +9,9 @@ This function classifies animal movement near linear barriers into 6 different b
 }
 \usage{
 BaBA(animal, barrier, d,
-interval, b_time, p_time, w, tolerance, units = c("secs", "mins", "hours", "days", "weeks"),
-max_cross, sd_multiplier, exclude_buffer, 
-export_images, img_path, img_suffix)
+interval = NULL, b_time = 4, p_time = 36, w = 168, tolerance = 0, units = c("secs", "mins", "hours", "days", "weeks"),
+max_cross = 0,  sd_multiplier = 1, exclude_buffer = F,
+export_images = F, img_path = "event_imgs", img_suffix = NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -63,7 +63,7 @@ When \code{export_images} is \code{TRUE}, the \code{character} name of the folde
 }
 }
 \details{
-\code{BaBA} works better with cleaned \code{animal} dataframe. It is OK to have missing steps but remove repetitive timesteps before running \code{BaBA}.
+\code{BaBA} works better with cleaned \code{animal} dataframe. Make sure your date column is cleaned so that the time difference between any step is divisible by \code{interval}. It is OK to have missing steps but remove repetitive timesteps before running \code{BaBA}. 
 
 Barrier buffer distance \code{d} represents the distance on both sides of the barrier lines within which animal movement locations are considered 'encounters' with the barrier, and continuous locations form an \emph{'encounter event'}. This might be the most important parameter to set the BaBA. The buffer distance will affect numbers and durations of trajectories identified as 'encounter events'. For species with different movement capacities or ecological attributes, barrier effect distance might be different. You can decide the distance either by a priori knowledge or testing a range of distance and compare the results.
 

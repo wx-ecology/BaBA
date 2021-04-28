@@ -36,9 +36,9 @@ BaBA <-
     
     interval_per_individual <- tapply(animal$date, animal$Animal.ID, function(x) names(which.max(table( as.numeric(diff(x), units = units)))))
     if(is.null(interval)) { # figure out interval (as the most frequent difference in timestamp) if not provided but give an error if not the same for all individuals
-      if(all(interval_per_individual == interval_per_individual[1])) interval <- as.numeric(interval_per_individual[1]) else stop("time interval not provided and not all individuals have been sampled at the same frequency.")
+      if(all(interval_per_individual == interval_per_individual[1])) interval <- as.numeric(interval_per_individual[1]) else stop("Not all individuals have been sampled at the same frequency. Run individuals with different intervals seperately, or double-check whether your date column is cleaned.")
     } else {
-      if (any(as.numeric(interval_per_individual) > interval, na.rm = T)) stop("BaBA interval needs to be no smaller than movement data interval") 
+      if (any(as.numeric(interval_per_individual) > interval, na.rm = T)) stop("BaBA interval needs to be no smaller than the actual data interval. Also double-check whether your date column is cleaned.") 
     }
     
     b <- b_time / interval
@@ -160,7 +160,7 @@ BaBA <-
       
       # classify short encounters (bounce and quick cross) ####
       # if no more than b*interval, only spend small amount of time in this burst
-      if (duration <= b * interval) {
+      if (duration <= b_time) {
         pt.first <- encounter_i$ptsID[1]#first point in the burst
         pt.last <- encounter_i$ptsID[nrow(encounter_i)]
         
