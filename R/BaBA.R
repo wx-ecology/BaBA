@@ -33,6 +33,7 @@ BaBA <-
     if (!"date" %in% names(animal)) stop("please rename the date column to 'date'")
     if (!"Animal.ID" %in% names(animal)) stop("please rename the individual ID column to 'Animal.ID'")
     if (!(inherits(animal$date, "POSIXct"))) stop("date needs to be 'POSIXct' format")
+    if (sum(is.na(animal$date)) > 0) stop("please exclude rows where date is NA")
     
     interval_per_individual <- tapply(animal$date, animal$Animal.ID, function(x) names(which.max(table( as.numeric(diff(x), units = units)))))
     if(is.null(interval)) { # figure out interval (as the most frequent difference in timestamp) if not provided but give an error if not the same for all individuals
