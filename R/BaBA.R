@@ -72,6 +72,8 @@ BaBA <-
     ## extract points that fall inside the buffer ----
     encounter <- raster::intersect(animal, barrier_buffer)
     
+    if (nrow(encounter) == 0) stop("no barrier encounter detected.")
+    
     ## create a burstID ----
     
     for(i in unique(encounter$Animal.ID)){
