@@ -330,7 +330,7 @@ BaBA <-
     ## clean the encounter spdataframe ##
     encounter <- encounter[!duplicated(encounter@data$burstID),]
     encounter@data <- encounter@data[,c("Animal.ID","burstID","date")]
-    encounter@data <- merge(encounter@data, event_df[,c("burstID","eventTYPE")])
+    encounter <- merge(encounter, event_df[,c("burstID","eventTYPE")])
     
     ## return output as a lits ####
     return(list(encounters = encounter,
