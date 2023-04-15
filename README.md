@@ -12,6 +12,12 @@ To install the latest development version of BaBA, in an R session, type:
 ![BaBA workflow](Flowchart.png)
 
 ## Updates
+V1.3 (Apr 14, 2023)
+1. Fixed bug related to "tolerance"
+
+V1.2 (May 26, 2022)
+1. Solve encounters and classified encounters mismatch issue
+
 V1.1 (April 10, 2021)
 1. Improved the visualization of exported images 
 2. Added time unit option and unified all temporal parameter units 
