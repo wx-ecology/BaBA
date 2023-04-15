@@ -90,10 +90,10 @@ BaBA <-
       ## then remove the interval from that so when there is no missing point, timediff2 should be 0. If <0, replicated timestamp; if >0, missing timestamp
       encounter_i$timediff2 <- round(encounter_i$timediff - interval, digits = 1)
       
-      ## then, if any timediff2 is > interval but <= tolerance, we need to bring in the missing points from outside the buffer.
-      if(any(encounter_i$timediff2 > interval & encounter_i$timediff2 <= tolerance, na.rm = T )) {
+      ## then, if any timediff2 is >= interval but <= tolerance, we need to bring in the missing points from outside the buffer.
+      if(any(encounter_i$timediff2 >= interval & encounter_i$timediff2 <= tolerance, na.rm = T )) {
         
-        idx_pts_of_interest <- which(encounter_i$timediff2 > interval & encounter_i$timediff2 <= tolerance)
+        idx_pts_of_interest <- which(encounter_i$timediff2 >= interval & encounter_i$timediff2 <= tolerance)
         
         for(pt in idx_pts_of_interest) {
           # find out what pts to fetch
@@ -112,10 +112,11 @@ BaBA <-
           else {
             fetched_pt$timediff <- NA
             fetched_pt$timediff2 <- 0 
+            fetched_pt$burstID <- encounter_i[encounter_i$ptsID == ptsID_of_interest_A,]$burstID
             # replace timediff2 of pts_of_interests to 0
             encounter_i$timediff2[pt] <- 0 
             # append fetched points to each other 
-            if(pt == idx_pts_of_interest[1]) fetched_pts <- fetched_pt else fetched_pts <- rbind(fetched_pts, fetched_pt)
+            if(pt == idx_pts_of_interest[1]) {fetched_pts <- fetched_pt} else if (exists("fetched_pts")) { fetched_pts <- rbind(fetched_pts, fetched_pt) } else {fetched_pts <- fetched_pt}
           }
         }
         
@@ -125,7 +126,7 @@ BaBA <-
         encounter_i <- encounter_i[order(encounter_i$ptsID), ]
       }
       
-      ## then do the cum sum of the new dataframe based on timediff2, using that as the unique burst ID (with animalID) 
+      ## then do the cum sum of the new dataframe based on timediff2, using that as the updated unique burst ID (with animalID) 
       encounter_i$burstID <- paste(i, cumsum(encounter_i$timediff2), sep = "_")
       
       # save into encounter_complete ####
