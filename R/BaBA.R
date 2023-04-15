@@ -65,7 +65,7 @@ BaBA <-
     
     # create buffer around barrier ----
     print("locating encounter events...")
-    barrier_buffer <- raster::buffer(barrier, width = d)
+    barrier_buffer <- rgeos::gUnaryUnion(rgeos::gBuffer(barrier,byid = T, width = d))
     
     # ---- classification step 1: generate encountering event dataframe ---- ####
     
@@ -331,7 +331,7 @@ BaBA <-
     ## clean the encounter spdataframe ##
     encounter <- encounter[!duplicated(encounter@data$burstID),]
     encounter@data <- encounter@data[,c("Animal.ID","burstID","date")]
-    encounter@data <- merge(encounter@data, event_df[,c("burstID","eventTYPE")])
+    encounter <- merge(encounter, event_df[,c("burstID","eventTYPE")])
     
     ## return output as a lits ####
     return(list(encounters = encounter,
