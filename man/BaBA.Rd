@@ -9,14 +9,14 @@ This function classifies animal movement near linear barriers into 6 different b
 }
 \usage{
 BaBA(animal, barrier, d,
-interval = NULL, b_time = 4, p_time = 36, w = 168, tolerance = 0, units = c("secs", "mins", "hours", "days", "weeks"),
+interval = NULL, b_time = 4, p_time = 36, w = 168, tolerance = 0, units = "hours",
 max_cross = 0,  sd_multiplier = 1, exclude_buffer = F,
 export_images = F, img_path = "event_imgs", img_suffix = NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{animal}{
-A \code{"SpatialPointsDataFrame"} of animal movement with a column named \code{"Animal.ID"} that identifies each individual; a column named \code{"date"} in \code{"POSIXct"} format. \code{CRS} has to be the same as \code{barrier}, preferably in projected UTM coordinate system. More see Details.
+A \code{"SpatialPointsDataFrame"} of animal movement with a column named \code{"Animal.ID"} that identifies each individual; a column named \code{"date"} in \code{"POSIXct"} format. \code{CRS} has to be the same as \code{barrier}, preferably in a projected UTM coordinate system. More see Details.
 }
 \item{barrier}{
 A \code{"SpatialLinesDataFrame"} showing barrier locations in the area overlapped with \code{animal} movement data. In the same spatial projection as \code{animal}.
@@ -25,7 +25,7 @@ A \code{"SpatialLinesDataFrame"} showing barrier locations in the area overlappe
 Barrier buffer size in meters if \code{barrier} has a projected coordinate system CRS, in the units of \code{barrier} map otherwise. 
 }
 \item{interval}{
-Time interval of the movement data (unit specified in \code{units}). If not specified, BaBA will use the most frequent time difference between steps as \code{interval}, which might affect result accuracy if the data has irregular time interval or a lot of missing data. 
+Time interval of the movement data (unit specified in \code{units}). If not specified, BaBA will use the most frequent time difference between steps as \code{interval}, which might affect result accuracy if the data has an irregular time interval or a lot of missing data. 
 }
 \item{b_time}{
 Maximum duration, in the same unit as \code{interval}, that an encounter event would be considered as a short event (\emph{'bounce'} or \emph{'quick cross'}). Must be divisible by \code{interval}
@@ -40,23 +40,22 @@ The length of time, in the same unit as \code{interval}, to include around the e
 \item{tolerance}{
 The maximum duration, in the same unit as \code{interval}, to allow points that are outside of barrier buffer but between 2 sets of points within the buffer to be included, so that all points are considered as one continous \emph{encounter event}. Useful when movement data has a very high temporal resolution. Must be divisible by \code{interval}.
 }
-\item{units} {
+\item{units}{
 The temporal units of \code{interval}, \code{b_time}, \code{p_time}, \code{w}, and \code{tolerance}. One of "secs", "mins", "hours", "days", and "weeks".
 }
 \item{max_cross}{
 The maximum number of crosses in an encounter event allowed for in tracing and back-and-forth behavior. More see Details. 
 }
 \item{sd_multiplier}{
-A \code{numeric} value to determine the numbers of standard deviations used that defines the normal range of movement straightness. Default is 1. More in Details. 
-}
+A \code{numeric} value to determine the numbers of standard deviations used that defines the normal range of movement straightness. Default is 1. More in Details. }
 \item{exclude_buffer}{
 \code{Logical}. Whether to consider movement locations within barrier buffers when calculating average movement straightness. More see Details.  
 }
 \item{export_images}{
-\code{Logical}. If \code{TRUE,} will export snapshot of event locations as \code{.png} files named with the classification of the event, the \code{LocationID} of the animal, the \code{burstID} of the event and potential suffix specified by argument \code{export_suffix}.
+\code{Logical}. If \code{TRUE,} will export snapshot of event locations as \code{.png} files named with the classification of the event, the \code{LocationID} of the animal, the \code{burstID} of the event and potential suffix specified by argument \code{img_suffix}.
 }
-\item{export_path}{
-When \code{export_images} is \code{TRUE}, the \code{character} name of the folder that the images should be exported to. The folder will be created in the working directory if it does not exist.
+\item{img_path}{
+When \code{export_images} is \code{TRUE}, the \code{character} name of the folder that the images should be exported to. The folder will be created in the working directory if it does not exist. Defaults to "event_imgs".
 }
 \item{img_suffix}{
 \code{character} to be added at the end of the naming if the images are exported when \code{export_images} is \code{TRUE}
@@ -67,7 +66,7 @@ When \code{export_images} is \code{TRUE}, the \code{character} name of the folde
 
 Barrier buffer distance \code{d} represents the distance on both sides of the barrier lines within which animal movement locations are considered 'encounters' with the barrier, and continuous locations form an \emph{'encounter event'}. This might be the most important parameter to set the BaBA. The buffer distance will affect numbers and durations of trajectories identified as 'encounter events'. For species with different movement capacities or ecological attributes, barrier effect distance might be different. You can decide the distance either by a priori knowledge or testing a range of distance and compare the results.
 
-An average straightness is used to be compared to the straightness of the straightness of a to-be-classified encounter event in order to determine whether the event is \emph{'trace'} (more straightness than average), \emph{'back-n-forth'} (less straight than average), or \emph{'normal movement'} (similar to average). The reason to apply a moving window method with a width of \code{w} to calculate the average straightness is because some animal movements, such as migrations, show great seasonal variations. Moving window method calculates localized average straightness around the time when the to-be-classified encounter event occurs. 
+The average straightness is compared to the straightness of a to-be-classified encounter event in order to determine whether the event is \emph{'trace'} (more straight than average), \emph{'back-n-forth'} (less straight than average), or \emph{'normal movement'} (similar to average). The reason to apply a moving window method with a width of \code{w} to calculate the average straightness is because some animal movements, such as migrations, show great seasonal variations. The moving window method calculates localized average straightness around the time when the to-be-classified encounter event occurs. 
 
 The default average straightness calculation considers movement segments \code{w/2} days before and after the focal encoutner event, which can include movement locations within and outside of the barrier buffers. One might want to control potential impacts of barriers on movement and only calculate average movement straightness based on locatons outside of fence buffers. Use \code{exclude_buffer} to indicate whether or not to include movement locations inside barrier buffers. The default is \code{FALSE} because in the sample study fence density is relatively high and animals fall in barrier buffers all the time. If excluded, not enough continuous locations within the time window would be outside of the buffer.
 
@@ -79,7 +78,7 @@ When the barriers are curvy or the temporal resolution of the movement data is c
 \value{
 \code{BaBA} returns a list.
 \item{$classification}{
-a dataframe. Each row represents one encounter event. \code{AnimalID} is the ID of the individual; \code{burstID} is the ID of the encounter event and it matches the ID of the exported images; \code{easting} and \code{northing} are the coordinates of the starting location of the encounter event; \code{start_time}, \code{end_time}, and \code{duration} describe the temporal characteristics of the encounter event; \code{cross} is the number of intersections between the encounter event trajectory and the barrier; \code{straightness} is the straightness of the encounter event trajectory and is NaN when the encounter event is \emph{'bounce} or \emph{'quick cross'}; finally, \code{eventTYPE} is the barrier behavior classification of the encounter event.
+a \code{data.frame}. Each row represents one encounter event. \code{AnimalID} is the ID of the individual; \code{burstID} is the ID of the encounter event and it matches the ID of the exported images; \code{easting} and \code{northing} are the coordinates of the starting location of the encounter event; \code{start_time}, \code{end_time}, and \code{duration} describe the temporal characteristics of the encounter event; \code{cross} is the number of intersections between the encounter event trajectory and the barrier; \code{straightness} is the straightness of the encounter event trajectory and is NaN when the encounter event is \emph{'bounce} or \emph{'quick cross'}; finally, \code{eventTYPE} is the barrier behavior classification of the encounter event.
 }
 \item{$encounters}{
 a \code{SpatialPointsDataFrame} showing the locations of classified encounter events represented by the starting location.
