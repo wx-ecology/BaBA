@@ -17,7 +17,7 @@
 BaBA <-
   function(animal, barrier, d, 
            interval = NULL, b_time = 4, p_time = 36, w = 168, tolerance = 0, units = "hours", 
-           max_cross = 0,  sd_multiplier = 1, exclude_buffer = F, 
+           max_cross = 0,  sd_multiplier = 1, exclude_buffer = F, round_fixes = F, 
            export_images = F, img_path = "event_imgs", img_suffix = NULL) {
     
     #############################################
@@ -35,7 +35,11 @@ BaBA <-
     if (!(inherits(animal$date, "POSIXct"))) stop("date needs to be 'POSIXct' format")
     if (sum(is.na(animal$date)) > 0) stop("please exclude rows where date is NA")
     
-    interval_per_individual <- tapply(animal$date, animal$Animal.ID, function(x) names(which.max(table( as.numeric(diff(x), units = units)))))
+    if(round_fixes){
+      interval_per_individual <- tapply(animal$date, animal$Animal.ID, function(x) names(which.max(table(round(as.numeric(diff(x), units = units),0)))))
+    } else {
+      interval_per_individual <- tapply(animal$date, animal$Animal.ID, function(x) names(which.max(table(as.numeric(diff(x), units = units)))))
+    }
     if(is.null(interval)) { # figure out interval (as the most frequent difference in timestamp) if not provided but give an error if not the same for all individuals
       if(all(interval_per_individual == interval_per_individual[1])) interval <- as.numeric(interval_per_individual[1]) else stop("Not all individuals have been sampled at the same frequency. Run individuals with different intervals seperately, or double-check whether your date column is cleaned.")
     } else {

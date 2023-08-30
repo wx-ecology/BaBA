@@ -10,7 +10,7 @@ This function classifies animal movement near linear barriers into 6 different b
 \usage{
 BaBA(animal, barrier, d,
 interval = NULL, b_time = 4, p_time = 36, w = 168, tolerance = 0, units = "hours",
-max_cross = 0,  sd_multiplier = 1, exclude_buffer = F,
+max_cross = 0,  sd_multiplier = 1, exclude_buffer = F, round_fixes = F, 
 export_images = F, img_path = "event_imgs", img_suffix = NULL)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -50,6 +50,9 @@ The maximum number of crosses in an encounter event allowed for in tracing and b
 A \code{numeric} value to determine the numbers of standard deviations used that defines the normal range of movement straightness. Default is 1. More in Details. }
 \item{exclude_buffer}{
 \code{Logical}. Whether to consider movement locations within barrier buffers when calculating average movement straightness. More see Details.  
+}
+\item{round_fixes}{
+\code{Logical}. Indicates whether elements of the \code{"date"} column of \code{animal} should be rounded to the nearest \code{units}. This is intended to account for minor variations in fix acquisition time that may lead to some intervals being slightly longer than \code{interval}. Note that this is not a replacement for cleaning the \code{animal} data.frame and removing repetitive timesteps as described in Details.
 }
 \item{export_images}{
 \code{Logical}. If \code{TRUE,} will export snapshot of event locations as \code{.png} files named with the classification of the event, the \code{LocationID} of the animal, the \code{burstID} of the event and potential suffix specified by argument \code{img_suffix}.
