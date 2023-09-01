@@ -302,7 +302,7 @@ BaBA <-
           
           # calculate straightness only if at least as long as encounter event
           if(duration_ii >= duration_i) {
-            for(iii in c(1: (which(animal_ii$date > (animal_ii$date[nrow(animal_ii)] - as.difftime(duration_i, units = units)))[1] -1))) {
+            for(iii in 1:(nrow(animal_ii) - duration_i / interval)) {
               mov_seg <- animal_ii[iii:(iii + duration_i/interval), ]
               straightnesses_i <- c(straightnesses_i, strtns(mov_seg))
             }
