@@ -28,8 +28,10 @@ BaBA <-
     }
     
     # prepare parameters and check input ------
-    if (!(class(animal)[1] == "SpatialPointsDataFrame")) stop("animal needs to be a SptialPointsDataFrame")
-    if (!(class(barrier)[1] == "SpatialLinesDataFrame")) stop("barrier needs to be a SptialLinesDataFrame")
+    if (class(animal)[1] != "sf") stop("animal needs to be an sf object")
+    if (st_geometry_type(animal)[1] != 'POINT') stop("animal needs to have a POINT geometry")
+    if (class(barrier)[1] != "sf") stop("barrier needs to be an sf object")
+    if (!(st_geometry_type(barrier)[1] %in% c('MULTILINESTRING', 'LINESTRING'))) stop("barrier needs to have either a LINESTRING or MULTILINESTRING geometry")
     if (!"date" %in% names(animal)) stop("please rename the date column to 'date'")
     if (!"Animal.ID" %in% names(animal)) stop("please rename the individual ID column to 'Animal.ID'")
     if (!(inherits(animal$date, "POSIXct"))) stop("date needs to be 'POSIXct' format")
@@ -63,18 +65,21 @@ BaBA <-
     
     for (i in unique(animal$Animal.ID)) {
       mov.seg.i <- animal[animal$Animal.ID == i, ]
-      animal@data$ptsID[animal$Animal.ID == i] <-
-        seq(nrow(mov.seg.i))
+      animal$ptsID[animal$Animal.ID == i] <- seq(nrow(mov.seg.i))
     }
+    
+    # explicitly suppres constant geometry assumption warning by confirming attribute is constant throughout the geometry. See https://github.com/r-spatial/sf/issues/406 for details.
+    sf::st_agr(animal) <- 'constant'   
+    sf::st_agr(barrier) <- 'constant'
     
     # create buffer around barrier ----
     print("locating encounter events...")
-    barrier_buffer <- rgeos::gUnaryUnion(rgeos::gBuffer(barrier,byid = T, width = d))
+    barrier_buffer <- sf::st_union(sf::st_buffer(barrier, dist = d, nQuadSegs = 5))  ## Note that nQuadSegs is set to 5 as this was the default value for rgeos::gBuffer in previous versions of BaBA
     
     # ---- classification step 1: generate encountering event dataframe ---- ####
     
     ## extract points that fall inside the buffer ----
-    encounter <- raster::intersect(animal, barrier_buffer)
+    encounter <- sf::st_intersection(animal, barrier_buffer)
     
     if (nrow(encounter) == 0) stop("no barrier encounter detected.")
     
@@ -87,7 +92,7 @@ BaBA <-
       if (nrow(encounter_i) == 0) {
         warning(paste0 ("Individual ", i, " has no locations overlapped with the barrier buffer and is eliminated from analysis." ))
         next()
-        }
+      }
       
       ## first get time difference between all points in the buffer
       encounter_i$timediff <- c(interval, as.numeric(diff(encounter_i$date), units = units))
@@ -137,14 +142,14 @@ BaBA <-
       if(i == unique(encounter$Animal.ID[1])) encounter_complete <- encounter_i else encounter_complete <- rbind(encounter_complete, encounter_i)
     }
     
-    encounter <- encounter_complete # save back as encounter (encoutner_complete is bigger as it includes extra points that are within tolerance)
+    encounter <- encounter_complete # save back as encounter (encounter_complete is bigger as it includes extra points that are within tolerance)
     
     #############################################
     ########## classify short events ############
     #############################################
     print("classifying behaviors...") 
     ### open progress bar ----
-    pb <- txtProgressBar( style = 3)
+    pb <- txtProgressBar(style = 3)
     
     ### create empty object that will hold results ----
     event_df <- NULL
@@ -175,11 +180,15 @@ BaBA <-
         # extract movement segment with one point before and one point after the segmentation ####
         mov_seg_i <- movement.segment.b(animal_i, pt.first, pt.last)
         
-        # count the number of crossing ####
-        int.num <- length(rgeos::gIntersection(mov_seg_i, barrier))
+        # count the number of crossings ####
+        int.num <- nrow(
+          sf::st_coordinates(
+            sf::st_cast(
+              sf::st_intersection(mov_seg_i, barrier),
+              to = 'MULTIPOINT')))
         
         # if no crossing and we didn't have both points (before and after), then we can't tell if it crossed
-        if (int.num == 0 & nrow(coordinates(mov_seg_i)[[1]][[1]]) != (nrow(encounter_i)+2)) {
+        if (int.num == 0 & nrow(sf::st_coordinates(mov_seg_i)) != (nrow(encounter_i)+2)) {
           # means that no points were before or after the encounter and we can't tell if the animal crossed
           classification <- "unknown"
           
@@ -193,8 +202,8 @@ BaBA <-
           png(paste0(img_path, "/", classification, "_", i, "_", img_suffix, ".png"), width = 6, height = 6, units = "in", res = 90)
           plot(mov_seg_i, main = classification, sub = paste("cross =", int.num, ", duration =", duration, units))
           plot(barrier_buffer, border = scales::alpha("red", 0.5), lty = "dashed", add = T)
-          lines(barrier, col = "red", lwd = 2)
-          points(encounter_i, pch = 20, col = "cyan3", type = "o", lwd = 2)
+          plot(st_geometry(barrier), col = "red", lwd = 2, add = TRUE)
+          plot(st_geometry(encounter_i), pch = 20, col = "cyan3", type = "o", lwd = 2, add = TRUE)
           dev.off()
         }
       }
@@ -206,28 +215,28 @@ BaBA <-
       if (duration > b_time) {
         
         ## first calculate number of crossings (without looking at extra points like we did for short encounter)
-        mov_seg_i <- SpatialLines(list(Lines(Line(coordinates(encounter_i)), ID = encounter_i$date[1])), proj4string = animal@proj4string)
-        int.num <- length(rgeos::gIntersection(mov_seg_i, barrier))
+        mov_seg_i <- sf::st_cast(dplyr::summarize(encounter_i, do_union = FALSE),
+                                 to = 'LINESTRING')
+        int.num <- nrow(
+          sf::st_coordinates(
+            sf::st_cast(
+              sf::st_intersection(mov_seg_i, barrier),
+              to = 'MULTIPOINT')))
+        
         ## then check if duration is smaller of bigger than p and classify accordingly
         if(duration > p_time) {
-          
           classification <- "Trapped"
-          
         } else {
-          
           classification <- "TBD" # these will be further classified in the next loop
-          
         }
-        
-        
+
         # plot these examples to check later
         if (export_images & !classification %in% "TBD") {
           png(paste0(img_path, "/", classification, "_", i, "_", img_suffix, ".png"), width = 6, height = 6, units = "in", res = 90)
-          
           plot(mov_seg_i, main = classification, sub = paste("cross =", int.num, ", duration =", duration, units))
           plot(barrier_buffer, border = scales::alpha("red", 0.5), lty = "dashed", add = T)
-          lines(barrier, col = "red", lwd = 2)
-          points(encounter_i, pch = 20, col = "cyan3", type = "o", lwd = 2)
+          plot(st_geometry(barrier), col = 'red', lwd = 2, add = TRUE)
+          plot(st_geometry(encounter_i), pch = 20, col = "cyan3", type = "o", lwd = 2, add = TRUE)
           dev.off()
         }
       }
@@ -237,8 +246,8 @@ BaBA <-
       event_df <- rbind(event_df, data.frame(
         AnimalID = encounter_i$Animal.ID[1],
         burstID = i,
-        easting = coordinates(encounter_i)[1, 1],
-        northing = coordinates(encounter_i)[1, 2],
+        easting = sf::st_coordinates(encounter_i)[1, 1],
+        northing = sf::st_coordinates(encounter_i)[1, 2],
         start_time,
         end_time,
         duration,
@@ -268,7 +277,7 @@ BaBA <-
         animal_i <- animal[animal$Animal.ID == event_i$AnimalID, ]
         encounter_i <- encounter[encounter$burstID %in% event_i$burstID,]
         
-        # remove points that are inside the buffer if used said so
+        # remove points that are inside the buffer if user said so
         if (exclude_buffer) {
           animal_i <- animal_i[!animal_i$ptsID %in% encounter$ptsID[encounter$Animal.ID == event_i$AnimalID], ]
         } 
@@ -277,13 +286,13 @@ BaBA <-
         #   animal_i <- animal_i[!animal_i$ptsID %in% encounter$ptsID[encounter$Animal.ID == event_i$AnimalID] & encounter$burstID %in% event_i$burstID, ]
         # }
         
-        # keep only data X units before and X after event
+        # keep only data w/2 units before and w/2 after event
         animal_i <- animal_i[animal_i$date >= event_i$start_time - as.difftime(w/2, units = units) & animal_i$date <= event_i$end_time +  as.difftime(w/2, units = units), ]
         
         # identify continuous sections in the remaining movement data
         animal_i$continuousID <- cumsum(abs(c(interval, round(diff(animal_i$date, units = units), digits = 1)) - interval)) # sep 11, 2020. added abs() to accomodate potential data points with smaller time intervals
         
-        # for each continuous sections, calculate straigness of all movements lasting the duration of our event (moving window of the size of the encounter)
+        # for each continuous sections, calculate straightness of all movements lasting the duration of our event (moving window of the size of the encounter)
         straightnesses_i <- NULL
         for(ii in unique(animal_i$continuousID)) {
           animal_ii <- animal_i[animal_i$continuousID == ii, ]
@@ -291,7 +300,7 @@ BaBA <-
           #duration of period
           duration_ii <- difftime(animal_ii$date[nrow(animal_ii)], animal_ii$date[1], units = units)
           
-          # calculate straigness only if at least as long as encounter event
+          # calculate straightness only if at least as long as encounter event
           if(duration_ii >= duration_i) {
             for(iii in c(1: (which(animal_ii$date > (animal_ii$date[nrow(animal_ii)] - as.difftime(duration_i, units = units)))[1] -1))) {
               mov_seg <- animal_ii[iii:(iii + duration_i/interval), ]
@@ -312,35 +321,39 @@ BaBA <-
           if(straightness_i >= lower & event_i$straightness <= upper) event_df[i, ]$eventTYPE <- "Average_Movement"
         } else {
           event_df[i, ]$eventTYPE = "unknown"
-          if(is.null(straightnesses_i)) {straightnesses_i <- NA} # adding this to avoid warning message when ploting.
+          if(is.null(straightnesses_i)) {straightnesses_i <- NA} # adding this to avoid warning message when plotting.
         }
         
         # plot to check later ####
         if(export_images) {
           png(paste0(img_path, "/",  event_df[i, ]$eventTYPE, "_", event_i$burstID, "_", img_suffix, ".png"), width = 6, height = 6, res = 96, units  = "in")
-          A = by(as.data.frame(coordinates(animal_i)), animal_i$continuousID, Line, simplify = T)
-          A = SpatialLines(mapply(sp::Lines, A, ID = names(A), SIMPLIFY = F))
-          
-          plot(A,
-               main = event_df[i, ]$eventTYPE, sub = paste("cross = ", event_df[i, ]$cross, ", duration =", event_df[i, ]$duration, ", stri =", round(straightness_i, 2), ", str_mean = ",  round(mean(straightnesses_i), 2), ", str_sd = ",  round(sd(straightnesses_i), 2)))
-          plot(barrier_buffer, border = scales::alpha("red", 0.5), lty = "dashed", add = T)
-          lines(barrier, col = "red", lwd = 2)
-          points(encounter_i, pch = 20, col = "cyan3", type = "o", lwd = 2)
+          A <- sf::st_cast(
+            dplyr::summarize(
+              dplyr::group_by(animal_i, continuousID),
+              do_union = FALSE),
+            to = 'LINESTRING')
+          plot(sf::st_geometry(A), main = event_i$eventTYPE,
+               sub = paste0("cross = ", event_i$cross, ", duration =", event_i$duration, ", stri =", round(straightness_i, 2), ", str_mean = ",  round(mean(straightnesses_i), 2), ", str_sd = ",  round(sd(straightnesses_i), 2)))
+          plot(sf::st_geometry(barrier_buffer), border = scales::alpha("red", 0.5), lty = "dashed", add = TRUE)
+          plot(sf::st_geometry(barrier), col = "red", lwd = 2, add = TRUE)
+          plot(sf::st_geometry(encounter_i), pch = 20, col = "cyan3", type = "o", lwd = 2, add = TRUE)
           dev.off()
         }
       }
     }
   
     print("creating dataframe...")
-    ## clean the encounter spdataframe ##
-    encounter <- encounter[!duplicated(encounter@data$burstID),]
-    encounter@data <- encounter@data[,c("Animal.ID","burstID","date")]
-    encounter <- merge(encounter, event_df[,c("burstID","eventTYPE")])
+    ## clean the encounter data ##
+    encounter_final <- encounter[!duplicated(encounter$burstID),]
+    encounter_final <- dplyr::left_join(encounter_final,
+                                        dplyr::select(event_df, c(burstID, eventTYPE)),
+                                        by = 'burstID')
+    encounter_final <- dplyr::select(encounter_final, c(Animal.ID, burstID, date, eventTYPE))
     
-    ## return output as a lits ####
-    return(list(encounters = encounter,
-              classification = event_df))
-}
+    ## return output as a list ####
+    return(list(encounters = encounter_final,
+                classification = event_df))
+  }
 
 
 #increase movement segment by one points before and one point after the focused encounter ####
