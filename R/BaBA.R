@@ -345,14 +345,10 @@ BaBA <-
 
 #increase movement segment by one points before and one point after the focused encounter ####
 movement.segment.b <- function(animal, pt1, pt2) {
-  segments <- animal[animal$ptsID >= pt1 - 1 &
-                       animal$ptsID <= pt2 + 1, ]
-  seg.line <- Lines(Line(coordinates(segments)),
-                    ID = segments$date[1])
-  
-  segments.sp <- SpatialLines(list(seg.line), proj4string = animal@proj4string)
-  
-  return(segments.sp)
+  pts_tmp <- animal[animal$ptsID >= pt1 - 1 & animal$ptsID <= pt2 + 1, ]
+  pts_comb <- dplyr::summarize(pts_tmp, do_union = FALSE)
+  segments_out <- sf::st_cast(pts_comb, to = 'LINESTRING')
+  return(segments_out)
 }
 
 # helper function on for calculating Euclidean distance
