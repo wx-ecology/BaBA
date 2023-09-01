@@ -360,28 +360,38 @@ calc_dist <- function(x.start, x.end, y.start, y.end){
   sqrt((x.end - x.start)^2 + (y.end - y.start)^2)
 }
 
-# calculate straigness of movement segment ####
+# calculate straightness of movement segment ####
 strtns <- function(mov_seg) {
   
+  locs_tmp <- sf::st_coordinates(mov_seg)
+  
   if (sum(duplicated(mov_seg$date)) > 0 ) {
-    straightness = NA
+    straightness <- NA
     # warning("There are duplicated timestamps")
+  } else if(nrow(locs_tmp) == 1){
+    straightness <- NA
   } else {
-  
-  # calculate trajectory
-  traj <- adehabitatLT::as.ltraj(xy = coordinates(mov_seg), date = mov_seg$date, id = as.character(mov_seg$Animal.ID))
-  
-  #moving distance from first pt to last pt in the burst
-  traj.dist <- sqrt(
-    (traj[[1]]$x[1] - traj[[1]]$x[nrow(traj[[1]])]) * (traj[[1]]$x[1] - traj[[1]]$x[nrow(traj[[1]])]) +
-      (traj[[1]]$y[1] - traj[[1]]$y[nrow(traj[[1]])]) * (traj[[1]]$y[1] - traj[[1]]$y[nrow(traj[[1]])])
-  )
-  
-  #sum of all step lengths
-  traj.lgth <- sum(traj[[1]]$dist, na.rm = TRUE)
-  
-  #straightness ranges from 0 to 1. More close to 0 more sinuous it is.
-  straightness <- traj.dist/traj.lgth }
+    ## Calculate Euclidean distance between the first and last point
+    euc_dist <- 
+      as.numeric(
+        calc_dist(x.start = locs_tmp[1,1], x.end = locs_tmp[nrow(locs_tmp),1],
+                  y.start = locs_tmp[1,2], y.end = locs_tmp[nrow(locs_tmp),2]))
+    
+    ## Calculate path distance as the sum of all step lengths
+    mov_seg$dist <- NA
+    for(j in 2:nrow(mov_seg)){
+      mov_seg$dist[j] <- calc_dist(x.start = locs_tmp[j - 1, 1],
+                                   x.end = locs_tmp[j, 1],
+                                   y.start = locs_tmp[j - 1, 2],
+                                   y.end = locs_tmp[j, 2])
+    }
+    path_dist <- sum(mov_seg$dist, na.rm = TRUE)
+    
+    ## Calculate straightness as the ratio of Euclidean to path distance.
+    ## Straightness ranges from 0 to 1 with values closer to 0 being more
+    ## sinuous.
+    straightness <- euc_dist/path_dist
+  }
   
   return(straightness)
 }
