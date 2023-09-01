@@ -355,6 +355,10 @@ movement.segment.b <- function(animal, pt1, pt2) {
   return(segments.sp)
 }
 
+# helper function on for calculating Euclidean distance
+calc_dist <- function(x.start, x.end, y.start, y.end){
+  sqrt((x.end - x.start)^2 + (y.end - y.start)^2)
+}
 
 # calculate straigness of movement segment ####
 strtns <- function(mov_seg) {
