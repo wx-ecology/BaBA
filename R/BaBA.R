@@ -15,19 +15,17 @@
 
 
 BaBA <-
-  function(animal, barrier, d, 
-           interval = NULL, b_time = 4, p_time = 36, w = 168, tolerance = 0, units = "hours", 
-           max_cross = 0,  sd_multiplier = 1, exclude_buffer = F, round_fixes = F, 
-           export_images = F, img_path = "event_imgs", img_suffix = NULL) {
+  function(animal, barrier, d, interval = NULL, b_time = 4, p_time = 36, w = 168,
+           tolerance = 0, units = "hours", max_cross = 0,  sd_multiplier = 1,
+           exclude_buffer = F, round_fixes = F, export_images = F,
+           img_path = "event_imgs", img_suffix = NULL) {
     
-    #############################################
-    ############### initial checks ##############
-    #############################################
+    # initial checks ----------------------------------------------------------
     if(export_images) {
       if(!dir.exists(img_path)) dir.create(img_path)
     }
     
-    # prepare parameters and check input ------
+    ## prepare parameters and check input
     if (class(animal)[1] != "sf") stop("animal needs to be an sf object")
     if (st_geometry_type(animal)[1] != 'POINT') stop("animal needs to have a POINT geometry")
     if (class(barrier)[1] != "sf") stop("barrier needs to be an sf object")
@@ -42,7 +40,7 @@ BaBA <-
     } else {
       interval_per_individual <- tapply(animal$date, animal$Animal.ID, function(x) names(which.max(table(as.numeric(diff(x), units = units)))))
     }
-    if(is.null(interval)) { # figure out interval (as the most frequent difference in timestamp) if not provided but give an error if not the same for all individuals
+    if(is.null(interval)) { ## figure out interval (as the most frequent difference in timestamp) if not provided but give an error if not the same for all individuals
       if(all(interval_per_individual == interval_per_individual[1])) interval <- as.numeric(interval_per_individual[1]) else stop("Not all individuals have been sampled at the same frequency. Run individuals with different intervals seperately, or double-check whether your date column is cleaned.")
     } else {
       if (any(as.numeric(interval_per_individual) > interval, na.rm = T)) stop("BaBA interval needs to be no smaller than the actual data interval. Also double-check whether your date column is cleaned.") 
@@ -54,12 +52,10 @@ BaBA <-
     p <- p_time / interval
     if (round(p) != p) stop("p_time must be divisible by interval")
     
-    #############################################
-    ########## detect encounter events ##########
-    #############################################
     
-    # create point ID by individual -------
+    # classification step 1: generate encounter event data.frame -------------------------------------------------
     
+    ## create point ID by individual
     animal <- animal[order(animal$"Animal.ID", animal$date), ]
     animal$ptsID <- NA
     
@@ -68,23 +64,20 @@ BaBA <-
       animal$ptsID[animal$Animal.ID == i] <- seq(nrow(mov.seg.i))
     }
     
-    # explicitly suppres constant geometry assumption warning by confirming attribute is constant throughout the geometry. See https://github.com/r-spatial/sf/issues/406 for details.
+    ## explicitly suppress constant geometry assumption warning by confirming attribute is constant throughout the geometry. See https://github.com/r-spatial/sf/issues/406 for details.
     sf::st_agr(animal) <- 'constant'   
     sf::st_agr(barrier) <- 'constant'
     
-    # create buffer around barrier ----
+    ## create buffer around barrier
     print("locating encounter events...")
     barrier_buffer <- sf::st_union(sf::st_buffer(barrier, dist = d, nQuadSegs = 5))  ## Note that nQuadSegs is set to 5 as this was the default value for rgeos::gBuffer in previous versions of BaBA
     
-    # ---- classification step 1: generate encountering event dataframe ---- ####
-    
-    ## extract points that fall inside the buffer ----
+    ## extract points that fall inside the buffer
     encounter <- sf::st_intersection(animal, barrier_buffer)
     
     if (nrow(encounter) == 0) stop("no barrier encounter detected.")
     
-    ## create a burstID ----
-    
+    ## create unique burstIDs
     for(i in unique(encounter$Animal.ID)){
       
       encounter_i <- encounter[encounter$Animal.ID == i,]
@@ -99,105 +92,105 @@ BaBA <-
       ## then remove the interval from that so when there is no missing point, timediff2 should be 0. If <0, replicated timestamp; if >0, missing timestamp
       encounter_i$timediff2 <- round(encounter_i$timediff - interval, digits = 1)
       
-      ## then, if any timediff2 is >= interval but <= tolerance, we need to bring in the missing points from outside the buffer.
+      ## if any timediff2 is >= interval but <= tolerance, bring in the missing points from outside the buffer
       if(any(encounter_i$timediff2 >= interval & encounter_i$timediff2 <= tolerance, na.rm = T )) {
         
         idx_pts_of_interest <- which(encounter_i$timediff2 >= interval & encounter_i$timediff2 <= tolerance)
         
         for(pt in idx_pts_of_interest) {
-          # find out what pts to fetch
+          ## find out what pts to fetch
           ptsID_of_interest_B <- encounter_i$ptsID[pt]
           ptsID_of_interest_A <- encounter_i$ptsID[pt-1]
           
-          # fetch the points outside of the buffer and placehold timediff as NA and timediff2 as 0
+          ## fetch the points outside of the buffer and placehold timediff as NA and timediff2 as 0
           fetched_pt <- animal[animal$Animal.ID == i & 
                                  animal$ptsID > ptsID_of_interest_A & 
                                  animal$ptsID < ptsID_of_interest_B, ]
           
-          if (nrow(fetched_pt) == 0) {  # if there's no point outside of the buffer between the timestamp that means there's missing data
-            # since the missing data is still within the tolerence, we consider timediff2=0 so the points before and after will be in the same event
+          if (nrow(fetched_pt) == 0) {  ## if there's no point outside of the buffer between the timestamp that means there's missing data
+            ## since the missing data is still within the tolerance, we consider timediff2=0 so the points before and after will be in the same event
             encounter_i$timediff2[pt] <- 0
             next() } 
           else {
             fetched_pt$timediff <- NA
             fetched_pt$timediff2 <- 0 
             fetched_pt$burstID <- encounter_i[encounter_i$ptsID == ptsID_of_interest_A,]$burstID
-            # replace timediff2 of pts_of_interests to 0
+            ## reset timediff2 of pts_of_interests to 0
             encounter_i$timediff2[pt] <- 0 
-            # append fetched points to each other 
+            ## append fetched points to each other 
             if(pt == idx_pts_of_interest[1]) {fetched_pts <- fetched_pt} else if (exists("fetched_pts")) { fetched_pts <- rbind(fetched_pts, fetched_pt) } else {fetched_pts <- fetched_pt}
           }
         }
         
-        # append fetched pts
+        ## append fetched pts
         encounter_i <- rbind(encounter_i, fetched_pts)
-        #recorder animal i encounter event dataframe
+        ## recorder animal i's encounter event data.frame
         encounter_i <- encounter_i[order(encounter_i$ptsID), ]
       }
       
-      ## then do the cum sum of the new dataframe based on timediff2, using that as the updated unique burst ID (with animalID) 
+      ## do the cumulative sum of the new data.frame based on timediff2, using that as the updated unique burst ID (with animalID) 
       encounter_i$burstID <- paste(i, cumsum(encounter_i$timediff2), sep = "_")
       
-      # save into encounter_complete ####
+      ## save into encounter_complete
       if(i == unique(encounter$Animal.ID[1])) encounter_complete <- encounter_i else encounter_complete <- rbind(encounter_complete, encounter_i)
     }
     
-    encounter <- encounter_complete # save back as encounter (encounter_complete is bigger as it includes extra points that are within tolerance)
+    encounter <- encounter_complete ## save back as encounter (encounter_complete is bigger as it includes extra points that are within tolerance)
     
-    #############################################
-    ########## classify short events ############
-    #############################################
+    
+    # classification step 2: classify events -------------------------------------------------
+    
     print("classifying behaviors...") 
-    ### open progress bar ----
+    ## open progress bar
     pb <- txtProgressBar(style = 3)
     
-    ### create empty object that will hold results ----
+    ## create empty object that will hold results
     event_df <- NULL
     
-    ## run classification procedure for each encounter ####
+    ## run classification procedure for each encounter
     for(i in unique(encounter$burstID)) {
       
-      # update progressbar
+      ## update progressbar
       setTxtProgressBar(pb, which(unique(encounter$burstID) == i)/length(unique(encounter$burstID)))
       
-      # get what we need from the encounter ####
+      ## get what we need from the encounter
       encounter_i <- encounter[encounter$burstID == i, ]
       animal_i <- animal[animal$Animal.ID == encounter_i$Animal.ID[1],]
       start_time <- encounter_i$date[1]
       end_time <- encounter_i$date[nrow(encounter_i)]
       duration <-  difftime (end_time, start_time, units = units)
       
-      # calculating straightness of the encounter event ###
-      ## this will be used for median duration event but is output for reference for other event ####
+      ## calculating straightness of the encounter event
+      ## this will be used for median duration events but is output for reference for other events
       straightness_i <- strtns(encounter_i)
       
-      # classify short encounters (bounce and quick cross) ####
-      # if no more than b*interval, only spend small amount of time in this burst
+      
+      ### classify short events (bounce and quick cross) ---------------------------------------------------
+      
+      ## if no more than b*interval, only spend small amount of time in this burst
       if (duration <= b_time) {
-        pt.first <- encounter_i$ptsID[1]#first point in the burst
+        pt.first <- encounter_i$ptsID[1] ## first point in the burst
         pt.last <- encounter_i$ptsID[nrow(encounter_i)]
         
-        # extract movement segment with one point before and one point after the segmentation ####
+        ## extract movement segment with one point before and one point after the segmentation
         mov_seg_i <- movement.segment.b(animal_i, pt.first, pt.last)
         
-        # count the number of crossings ####
+        ## count the number of crossings
         int.num <- nrow(
           sf::st_coordinates(
             sf::st_cast(
               sf::st_intersection(mov_seg_i, barrier),
               to = 'MULTIPOINT')))
         
-        # if no crossing and we didn't have both points (before and after), then we can't tell if it crossed
+        ## if no crossing is indicated and both before and after points were missing then we cannot tell if the animal crossed
         if (int.num == 0 & nrow(sf::st_coordinates(mov_seg_i)) != (nrow(encounter_i)+2)) {
-          # means that no points were before or after the encounter and we can't tell if the animal crossed
           classification <- "unknown"
-          
         } else {
+          ## if there was not a crossing, classify as bounce, otherwise quick cross
           classification <- ifelse(int.num == 0, "Bounce", "Quick_Cross")
-          
         }
         
-        # plot these examples to check later
+        ## plot these examples to check later
         if(export_images) {
           png(paste0(img_path, "/", classification, "_", i, "_", img_suffix, ".png"), width = 6, height = 6, units = "in", res = 90)
           plot(mov_seg_i, main = classification, sub = paste("cross =", int.num, ", duration =", duration, units))
@@ -208,9 +201,8 @@ BaBA <-
         }
       }
       
-      #############################################
-      ########## classify Trapped events ##########
-      #############################################
+      
+      ### classify trapped events -------------------------------------------------
       
       if (duration > b_time) {
         
@@ -222,15 +214,14 @@ BaBA <-
             sf::st_cast(
               sf::st_intersection(mov_seg_i, barrier),
               to = 'MULTIPOINT')))
-        
-        ## then check if duration is smaller of bigger than p and classify accordingly
+        ## check if duration is smaller of bigger than p and classify accordingly
         if(duration > p_time) {
           classification <- "Trapped"
         } else {
-          classification <- "TBD" # these will be further classified in the next loop
+          classification <- "TBD" ## these will be further classified in the next loop
         }
-
-        # plot these examples to check later
+        
+        ## plot these encounters to check later
         if (export_images & !classification %in% "TBD") {
           png(paste0(img_path, "/", classification, "_", i, "_", img_suffix, ".png"), width = 6, height = 6, units = "in", res = 90)
           plot(mov_seg_i, main = classification, sub = paste("cross =", int.num, ", duration =", duration, units))
@@ -241,7 +232,7 @@ BaBA <-
         }
       }
       
-      # save output ####
+      ## save output
       
       event_df <- rbind(event_df, data.frame(
         AnimalID = encounter_i$Animal.ID[1],
@@ -258,62 +249,57 @@ BaBA <-
       ))
     }
     
-    ### close progress bar ----
+    ## close progress bar
     close(pb)
     
-    #############################################
-    ###### classify Back-n-forth and Trace ######
-    #############################################
     
-    ### back-n-forth and trace are based on comparing average straightness around the encounter event
+    ### classify back-n-forth and trace -----------------------------------------
     
+    ## process the "TBD" event types as back-n-forth or trace
+    ## back-n-forth and trace are based on comparing average straightness around the encounter event
     for (i in 1:nrow(event_df)) {
       if (event_df[i, ]$eventTYPE == "TBD") {
         event_i <- event_df[i, ]
         duration_i <- event_i$duration
         straightness_i <- event_i$straightness
         
-        # get movement data of the individual of interest
+        ## get movement data of the individual of interest
         animal_i <- animal[animal$Animal.ID == event_i$AnimalID, ]
         encounter_i <- encounter[encounter$burstID %in% event_i$burstID,]
         
-        # remove points that are inside the buffer if user said so
+        ## remove points that are inside the buffer if user said so
         if (exclude_buffer) {
           animal_i <- animal_i[!animal_i$ptsID %in% encounter$ptsID[encounter$Animal.ID == event_i$AnimalID], ]
         } 
         
-        # else {
-        #   animal_i <- animal_i[!animal_i$ptsID %in% encounter$ptsID[encounter$Animal.ID == event_i$AnimalID] & encounter$burstID %in% event_i$burstID, ]
-        # }
-        
-        # keep only data w/2 units before and w/2 after event
+        ## keep only data w/2 units before and w/2 after event
         animal_i <- animal_i[animal_i$date >= event_i$start_time - as.difftime(w/2, units = units) & animal_i$date <= event_i$end_time +  as.difftime(w/2, units = units), ]
         
-        # identify continuous sections in the remaining movement data
+        ## identify continuous sections in the remaining movement data
         animal_i$continuousID <- cumsum(abs(c(interval, round(diff(animal_i$date, units = units), digits = 1)) - interval)) # sep 11, 2020. added abs() to accomodate potential data points with smaller time intervals
         
-        # for each continuous sections, calculate straightness of all movements lasting the duration of our event (moving window of the size of the encounter)
+        ## for each continuous sections, calculate straightness of all movements lasting the duration of our event (moving window of the size of the encounter)
         straightnesses_i <- NULL
         for(ii in unique(animal_i$continuousID)) {
           animal_ii <- animal_i[animal_i$continuousID == ii, ]
           
-          #duration of period
+          ## duration of period
           duration_ii <- difftime(animal_ii$date[nrow(animal_ii)], animal_ii$date[1], units = units)
           
-          # calculate straightness only if at least as long as encounter event
+          ## calculate straightness only if at least as long as encounter event
           if(duration_ii >= duration_i) {
-            for(iii in 1:(nrow(animal_ii) - duration_i / interval)) {
+            for(iii in c(1: (which(animal_ii$date > (animal_ii$date[nrow(animal_ii)] - as.difftime(duration_i, units = units)))[1] -1))) {
               mov_seg <- animal_ii[iii:(iii + duration_i/interval), ]
               straightnesses_i <- c(straightnesses_i, strtns(mov_seg))
             }
           }
         }
         
-        # make sure there are enough data to calculate average monthly straightness before and after the encounter event
-        # (w/interval + 1) is the total possible segments if all data are present. 
-        # We define "enough" as at least 1/4 of the total possible segments are present to calculate average straightness.
+        ## make sure there are enough data to calculate average monthly straightness before and after the encounter event
+        ## (w/interval + 1) is the total possible segments if all data are present. 
+        ## We define "enough" as at least 1/4 of the total possible segments are present to calculate average straightness.
         if (length(straightnesses_i) >= (w/interval + 1)/4) {
-          # minimum max number possible/2 to calculate sd
+          ## minimum max number possible/2 to calculate sd
           upper <- mean(straightnesses_i) + sd_multiplier * sd(straightnesses_i)
           lower <- mean(straightnesses_i) - sd_multiplier * sd(straightnesses_i)
           if(straightness_i < lower) event_df[i, ]$eventTYPE <- ifelse(event_i$cross < max_cross, "Back_n_forth", "unknown")
@@ -321,10 +307,10 @@ BaBA <-
           if(straightness_i >= lower & event_i$straightness <= upper) event_df[i, ]$eventTYPE <- "Average_Movement"
         } else {
           event_df[i, ]$eventTYPE = "unknown"
-          if(is.null(straightnesses_i)) {straightnesses_i <- NA} # adding this to avoid warning message when plotting.
+          if(is.null(straightnesses_i)) {straightnesses_i <- NA} ## add this to avoid warning message when plotting
         }
         
-        # plot to check later ####
+        ## plot to check later
         if(export_images) {
           png(paste0(img_path, "/",  event_df[i, ]$eventTYPE, "_", event_i$burstID, "_", img_suffix, ".png"), width = 6, height = 6, res = 96, units  = "in")
           A <- sf::st_cast(
@@ -341,22 +327,26 @@ BaBA <-
         }
       }
     }
-  
+    
+    
+    # finalize data -----------------------------------------------------------
+    
     print("creating dataframe...")
-    ## clean the encounter data ##
+    ## clean the encounter data
     encounter_final <- encounter[!duplicated(encounter$burstID),]
     encounter_final <- dplyr::left_join(encounter_final,
                                         dplyr::select(event_df, c(burstID, eventTYPE)),
                                         by = 'burstID')
     encounter_final <- dplyr::select(encounter_final, c(Animal.ID, burstID, date, eventTYPE))
     
-    ## return output as a list ####
+    
+    ## return output as a list
     return(list(encounters = encounter_final,
                 classification = event_df))
   }
 
 
-#increase movement segment by one points before and one point after the focused encounter ####
+## increase movement segment by one points before and one point after the focused encounter
 movement.segment.b <- function(animal, pt1, pt2) {
   pts_tmp <- animal[animal$ptsID >= pt1 - 1 & animal$ptsID <= pt2 + 1, ]
   pts_comb <- dplyr::summarize(pts_tmp, do_union = FALSE)
@@ -364,12 +354,12 @@ movement.segment.b <- function(animal, pt1, pt2) {
   return(segments_out)
 }
 
-# helper function on for calculating Euclidean distance
+## helper function on for calculating Euclidean distance
 calc_dist <- function(x.start, x.end, y.start, y.end){
   sqrt((x.end - x.start)^2 + (y.end - y.start)^2)
 }
 
-# calculate straightness of movement segment ####
+## calculate straightness of movement segment
 strtns <- function(mov_seg) {
   
   locs_tmp <- sf::st_coordinates(mov_seg)
@@ -380,13 +370,13 @@ strtns <- function(mov_seg) {
   } else if(nrow(locs_tmp) == 1){
     straightness <- NA
   } else {
-    ## Calculate Euclidean distance between the first and last point
+    ## calculate Euclidean distance between the first and last point
     euc_dist <- 
       as.numeric(
         calc_dist(x.start = locs_tmp[1,1], x.end = locs_tmp[nrow(locs_tmp),1],
                   y.start = locs_tmp[1,2], y.end = locs_tmp[nrow(locs_tmp),2]))
     
-    ## Calculate path distance as the sum of all step lengths
+    ## calculate path distance as the sum of all step lengths
     mov_seg$dist <- NA
     for(j in 2:nrow(mov_seg)){
       mov_seg$dist[j] <- calc_dist(x.start = locs_tmp[j - 1, 1],
@@ -396,8 +386,8 @@ strtns <- function(mov_seg) {
     }
     path_dist <- sum(mov_seg$dist, na.rm = TRUE)
     
-    ## Calculate straightness as the ratio of Euclidean to path distance.
-    ## Straightness ranges from 0 to 1 with values closer to 0 being more
+    ## calculate straightness as the ratio of Euclidean to path distance.
+    ## straightness ranges from 0 to 1 with values closer to 0 being more
     ## sinuous.
     straightness <- euc_dist/path_dist
   }
