@@ -1,5 +1,5 @@
 
-range01 <- function(x){(x-min(x))/(max(x)-min(x))}
+range01 <- function(x){(x-min(x, na.rm=TRUE))/(max(x, na.rm=TRUE)-min(x, na.rm=TRUE))}
 
 ## default index_fun is to calculate the index used in Xu et al. 2021
 BaRanking <- function(classification, barrier, d, Barrier_ID, min_total_enc = 0, 
