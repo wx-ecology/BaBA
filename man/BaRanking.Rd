@@ -72,7 +72,7 @@ results_prong <- BaBA(animal = pronghorn, barrier = fences, d = 110, max_cross =
 # rank barriers with default evaluation expression
 fence_ranking <- BaRanking(classification = results_prong$classification,
   barrier = fences, d = 110, Barrier_ID = "FID_Fence0", min_total_enc = 5,
-  show_plot = T)  
+  show_plot = TRUE)  
 
 }
 

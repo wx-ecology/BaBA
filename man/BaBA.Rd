@@ -122,7 +122,7 @@ head(results_prong$classification)
 
 # plot encounter event locations
 plot(fences)
-plot(results_prong$encounters, add = T)
+plot(results_prong$encounters, add = TRUE)
 
 # write the encounters as shapefile, changing the date column to character to
 # avoid the shapefile dropping the time
@@ -132,5 +132,5 @@ sf::st_write(dplyr::mutate(results_prong$encounters, date = as.character(date)),
 # export event images to visually check event classifications. Using mule deer data as an example
 data("muleDeer")
 results_deer <- BaBA(animal = muleDeer, barrier = fences, d = 90,
-  export_images = T, img_suffix = "DEER")
+  export_images = TRUE, img_suffix = "DEER")
 }
