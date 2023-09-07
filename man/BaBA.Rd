@@ -118,7 +118,7 @@ names(pronghorn)
 results_prong <- BaBA(animal = pronghorn, barrier = fences, d = 110, max_cross = 4)
 
 # View BaBA results
-View(results_prong$classification)
+head(results_prong$classification)
 
 # plot encounter event locations
 plot(fences)
