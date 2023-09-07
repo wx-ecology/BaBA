@@ -70,10 +70,9 @@ data(pronghorn)
 results_prong <- BaBA(animal = pronghorn, barrier = fences, d = 110, max_cross = 4)
 
 # rank barriers with default evaluation expression
-fence_ranking <- BaRanking(classification = results_prong$classification, barrier = fences, d = 110, Barrier_ID = "FID_Fence0", min_total_enc = 5, show_plot = T)  
+fence_ranking <- BaRanking(classification = results_prong$classification,
+  barrier = fences, d = 110, Barrier_ID = "FID_Fence0", min_total_enc = 5,
+  show_plot = T)  
 
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }% use one of  RShowDoc("KEYWORDS")
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+

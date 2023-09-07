@@ -131,9 +131,6 @@ sf::st_write(dplyr::mutate(results_prong$encounters, date = as.character(date)),
 
 # export event images to visually check event classifications. Using mule deer data as an example
 data("muleDeer")
-results_deer <- BaBA(animal = muleDeer, barrier = fences, d = 90, export_images = T, img_suffix = "DEER")
+results_deer <- BaBA(animal = muleDeer, barrier = fences, d = 90,
+  export_images = T, img_suffix = "DEER")
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }% use one of  RShowDoc("KEYWORDS")
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
