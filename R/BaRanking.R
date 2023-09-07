@@ -12,7 +12,7 @@ BaRanking <- function(classification, barrier, d, Barrier_ID, min_total_enc = 0,
   classification_sf <- sf::st_as_sf(classification, coords = c("easting", "northing"), crs = sf::st_crs(barrier))
   
   ## spatial join by the fence buffer distance used in BaBA()
-  barrier_sf_joined <- sf::st_join(barrier_sf, classification_sf, join = st_is_within_distance, dist = d)
+  barrier_sf_joined <- sf::st_join(barrier, classification_sf, join = st_is_within_distance, dist = d)
   
   ## calculate # of each encounter event types
   by_type <- 
@@ -59,7 +59,7 @@ BaRanking <- function(classification, barrier, d, Barrier_ID, min_total_enc = 0,
     dplyr::select(-calc_expr)
   
   ## put back into spatial format
-  barrier_encounters_sf <- merge(barrier_sf, barrier_encounters, by = rlang::as_name(Barrier_ID), all.x = TRUE)
+  barrier_encounters_sf <- merge(barrier, barrier_encounters, by = rlang::as_name(Barrier_ID), all.x = TRUE)
   
   if(show_plot) {
     plot(sf::st_geometry(barrier_encounters_sf), col = "grey")
