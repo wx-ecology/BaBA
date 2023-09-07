@@ -27,9 +27,9 @@ BaBA <-
     
     ## prepare parameters and check input
     if (class(animal)[1] != "sf") stop("animal needs to be an sf object")
-    if (st_geometry_type(animal)[1] != 'POINT') stop("animal needs to have a POINT geometry")
+    if (sf::st_geometry_type(animal)[1] != 'POINT') stop("animal needs to have a POINT geometry")
     if (class(barrier)[1] != "sf") stop("barrier needs to be an sf object")
-    if (!(st_geometry_type(barrier)[1] %in% c('MULTILINESTRING', 'LINESTRING'))) stop("barrier needs to have either a LINESTRING or MULTILINESTRING geometry")
+    if (!(sf::st_geometry_type(barrier)[1] %in% c('MULTILINESTRING', 'LINESTRING'))) stop("barrier needs to have either a LINESTRING or MULTILINESTRING geometry")
     if (!"date" %in% names(animal)) stop("please rename the date column to 'date'")
     if (!"Animal.ID" %in% names(animal)) stop("please rename the individual ID column to 'Animal.ID'")
     if (!(inherits(animal$date, "POSIXct"))) stop("date needs to be 'POSIXct' format")
@@ -142,7 +142,7 @@ BaBA <-
     
     print("classifying behaviors...") 
     ## open progress bar
-    pb <- txtProgressBar(style = 3)
+    pb <- utils::txtProgressBar(style = 3)
     
     ## create empty object that will hold results
     event_df <- NULL
@@ -151,7 +151,7 @@ BaBA <-
     for(i in unique(encounter$burstID)) {
       
       ## update progressbar
-      setTxtProgressBar(pb, which(unique(encounter$burstID) == i)/length(unique(encounter$burstID)))
+      utils::setTxtProgressBar(pb, which(unique(encounter$burstID) == i)/length(unique(encounter$burstID)))
       
       ## get what we need from the encounter
       encounter_i <- encounter[encounter$burstID == i, ]
@@ -192,12 +192,12 @@ BaBA <-
         
         ## plot these examples to check later
         if(export_images) {
-          png(paste0(img_path, "/", classification, "_", i, "_", img_suffix, ".png"), width = 6, height = 6, units = "in", res = 90)
+          grDevices::png(paste0(img_path, "/", classification, "_", i, "_", img_suffix, ".png"), width = 6, height = 6, units = "in", res = 90)
           plot(mov_seg_i, main = classification, sub = paste("cross =", int.num, ", duration =", duration, units))
           plot(barrier_buffer, border = scales::alpha("red", 0.5), lty = "dashed", add = T)
-          plot(st_geometry(barrier), col = "red", lwd = 2, add = TRUE)
-          plot(st_geometry(encounter_i), pch = 20, col = "cyan3", type = "o", lwd = 2, add = TRUE)
-          dev.off()
+          plot(sf::st_geometry(barrier), col = "red", lwd = 2, add = TRUE)
+          plot(sf::st_geometry(encounter_i), pch = 20, col = "cyan3", type = "o", lwd = 2, add = TRUE)
+          grDevices::dev.off()
         }
       }
       
@@ -223,12 +223,12 @@ BaBA <-
         
         ## plot these encounters to check later
         if (export_images & !classification %in% "TBD") {
-          png(paste0(img_path, "/", classification, "_", i, "_", img_suffix, ".png"), width = 6, height = 6, units = "in", res = 90)
+          grDevices::png(paste0(img_path, "/", classification, "_", i, "_", img_suffix, ".png"), width = 6, height = 6, units = "in", res = 90)
           plot(mov_seg_i, main = classification, sub = paste("cross =", int.num, ", duration =", duration, units))
           plot(barrier_buffer, border = scales::alpha("red", 0.5), lty = "dashed", add = T)
-          plot(st_geometry(barrier), col = 'red', lwd = 2, add = TRUE)
-          plot(st_geometry(encounter_i), pch = 20, col = "cyan3", type = "o", lwd = 2, add = TRUE)
-          dev.off()
+          plot(sf::st_geometry(barrier), col = 'red', lwd = 2, add = TRUE)
+          plot(sf::st_geometry(encounter_i), pch = 20, col = "cyan3", type = "o", lwd = 2, add = TRUE)
+          grDevices::dev.off()
         }
       }
       
@@ -300,8 +300,8 @@ BaBA <-
         ## We define "enough" as at least 1/4 of the total possible segments are present to calculate average straightness.
         if (length(straightnesses_i) >= (w/interval + 1)/4) {
           ## minimum max number possible/2 to calculate sd
-          upper <- mean(straightnesses_i) + sd_multiplier * sd(straightnesses_i)
-          lower <- mean(straightnesses_i) - sd_multiplier * sd(straightnesses_i)
+          upper <- mean(straightnesses_i) + sd_multiplier * stats::sd(straightnesses_i)
+          lower <- mean(straightnesses_i) - sd_multiplier * stats::sd(straightnesses_i)
           if(straightness_i < lower) event_df[i, ]$eventTYPE <- ifelse(event_i$cross < max_cross, "Back_n_forth", "unknown")
           if (straightness_i > upper) event_df[i, ]$eventTYPE <- ifelse(event_i$cross < max_cross, "Trace", "unknown")
           if(straightness_i >= lower & event_i$straightness <= upper) event_df[i, ]$eventTYPE <- "Average_Movement"
@@ -312,18 +312,18 @@ BaBA <-
         
         ## plot to check later
         if(export_images) {
-          png(paste0(img_path, "/",  event_df[i, ]$eventTYPE, "_", event_i$burstID, "_", img_suffix, ".png"), width = 6, height = 6, res = 96, units  = "in")
+          grDevices::png(paste0(img_path, "/",  event_df[i, ]$eventTYPE, "_", event_i$burstID, "_", img_suffix, ".png"), width = 6, height = 6, res = 96, units  = "in")
           A <- sf::st_cast(
             dplyr::summarize(
               dplyr::group_by(animal_i, continuousID),
               do_union = FALSE),
             to = 'LINESTRING')
           plot(sf::st_geometry(A), main = event_i$eventTYPE,
-               sub = paste0("cross = ", event_i$cross, ", duration =", event_i$duration, ", stri =", round(straightness_i, 2), ", str_mean = ",  round(mean(straightnesses_i), 2), ", str_sd = ",  round(sd(straightnesses_i), 2)))
+               sub = paste0("cross = ", event_i$cross, ", duration =", event_i$duration, ", stri =", round(straightness_i, 2), ", str_mean = ",  round(mean(straightnesses_i), 2), ", str_sd = ",  round(stats::sd(straightnesses_i), 2)))
           plot(sf::st_geometry(barrier_buffer), border = scales::alpha("red", 0.5), lty = "dashed", add = TRUE)
           plot(sf::st_geometry(barrier), col = "red", lwd = 2, add = TRUE)
           plot(sf::st_geometry(encounter_i), pch = 20, col = "cyan3", type = "o", lwd = 2, add = TRUE)
-          dev.off()
+          grDevices::dev.off()
         }
       }
     }

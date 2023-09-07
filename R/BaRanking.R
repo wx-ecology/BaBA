@@ -46,7 +46,7 @@ BaRanking <- function(classification, barrier, d, Barrier_ID, min_total_enc = 0,
   ## combine the two tibbles
   barrier_encounters <- 
     by_type %>% 
-    left_join(by_ID, by = rlang::as_name(Barrier_ID)) %>% 
+    dplyr::left_join(by_ID, by = rlang::as_name(Barrier_ID)) %>% 
     replace(is.na(.), 0) %>%
     dplyr::mutate(
       ## calculate total encounters
@@ -56,13 +56,13 @@ BaRanking <- function(classification, barrier, d, Barrier_ID, min_total_enc = 0,
       calc_expr = dplyr::if_else(total_enc >= min_total_enc, eval(index_fun), NA),
       index = range01(calc_expr)) %>% 
     ## calc_expr is no longer needed  
-    select(-calc_expr)
+    dplyr::select(-calc_expr)
   
   ## put back into spatial format
   barrier_encounters_sf <- merge(barrier_sf, barrier_encounters, by = rlang::as_name(Barrier_ID), all.x = TRUE)
   
   if(show_plot) {
-    plot(st_geometry(barrier_encounters_sf), col = "grey")
+    plot(sf::st_geometry(barrier_encounters_sf), col = "grey")
     plot(barrier_encounters_sf['index'], add = TRUE)
   }
   
