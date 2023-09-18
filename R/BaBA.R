@@ -56,13 +56,12 @@ BaBA <-
     # classification step 1: generate encounter event data.frame -------------------------------------------------
     
     ## create point ID by individual
-    animal <- animal[order(animal$"Animal.ID", animal$date), ]
-    animal$ptsID <- NA
-    
-    for (i in unique(animal$Animal.ID)) {
-      mov.seg.i <- animal[animal$Animal.ID == i, ]
-      animal$ptsID[animal$Animal.ID == i] <- seq(nrow(mov.seg.i))
-    }
+    animal <-
+      animal %>% 
+      dplyr::arrange(Animal.ID, date) %>% 
+      dplyr::group_by(Animal.ID) %>% 
+      dplyr::mutate(ptsID = 1:dplyr::n()) %>% 
+      dplyr::ungroup()
     
     ## explicitly suppress constant geometry assumption warning by confirming attribute is constant throughout the geometry. See https://github.com/r-spatial/sf/issues/406 for details.
     sf::st_agr(animal) <- 'constant'   
@@ -70,7 +69,10 @@ BaBA <-
     
     ## create buffer around barrier
     print("locating encounter events...")
-    barrier_buffer <- sf::st_union(sf::st_buffer(barrier, dist = d, nQuadSegs = 5))  ## Note that nQuadSegs is set to 5 as this was the default value for rgeos::gBuffer in previous versions of BaBA
+    barrier_buffer <- 
+      barrier %>% 
+      sf::st_buffer(dist = d, nQuadSegs = 5) %>%   ## Note that nQuadSegs is set to 5 as this was the default value for rgeos::gBuffer in previous versions of BaBA
+      sf::st_union()
     
     ## extract points that fall inside the buffer
     encounter <- sf::st_intersection(animal, barrier_buffer)
@@ -80,17 +82,20 @@ BaBA <-
     ## create unique burstIDs
     for(i in unique(encounter$Animal.ID)){
       
-      encounter_i <- encounter[encounter$Animal.ID == i,]
-      
-      if (nrow(encounter_i) == 0) {
+      if (nrow(encounter %>% dplyr::filter(Animal.ID == i)) == 0) {
         warning(paste0 ("Individual ", i, " has no locations overlapped with the barrier buffer and is eliminated from analysis." ))
         next()
       }
       
-      ## first get time difference between all points in the buffer
-      encounter_i$timediff <- c(interval, as.numeric(diff(encounter_i$date), units = units))
-      ## then remove the interval from that so when there is no missing point, timediff2 should be 0. If <0, replicated timestamp; if >0, missing timestamp
-      encounter_i$timediff2 <- round(encounter_i$timediff - interval, digits = 1)
+      encounter_i <-
+        encounter %>% 
+        dplyr::filter(Animal.ID == i) %>% 
+        ## add time difference
+        dplyr::mutate(
+          ## time difference between all points in the buffer
+          timediff = c(interval, as.numeric(diff(date), units = units)),
+          ## remove the interval from that so when there is no missing point, timediff2 should be 0. If <0, replicated timestamp; if >0, missing timestamp
+          timediff2 = round(timediff - interval, digits = 1))
       
       ## if any timediff2 is >= interval but <= tolerance, bring in the missing points from outside the buffer
       if(any(encounter_i$timediff2 >= interval & encounter_i$timediff2 <= tolerance, na.rm = T )) {
@@ -103,9 +108,11 @@ BaBA <-
           ptsID_of_interest_A <- encounter_i$ptsID[pt-1]
           
           ## fetch the points outside of the buffer and placehold timediff as NA and timediff2 as 0
-          fetched_pt <- animal[animal$Animal.ID == i & 
-                                 animal$ptsID > ptsID_of_interest_A & 
-                                 animal$ptsID < ptsID_of_interest_B, ]
+          fetched_pt <- 
+            animal %>% 
+            dplyr::filter(Animal.ID == i & 
+                            ptsID > ptsID_of_interest_A & 
+                            ptsID < ptsID_of_interest_B)
           
           if (nrow(fetched_pt) == 0) {  ## if there's no point outside of the buffer between the timestamp that means there's missing data
             ## since the missing data is still within the tolerance, we consider timediff2=0 so the points before and after will be in the same event
@@ -176,11 +183,12 @@ BaBA <-
         mov_seg_i <- movement.segment.b(animal_i, pt.first, pt.last)
         
         ## count the number of crossings
-        int.num <- nrow(
-          sf::st_coordinates(
-            sf::st_cast(
-              sf::st_intersection(mov_seg_i, barrier),
-              to = 'MULTIPOINT')))
+        int.num <-
+          mov_seg_i %>% 
+          sf::st_intersection(barrier) %>% 
+          sf::st_cast(to = 'MULTIPOINT') %>% 
+          sf::st_coordinates() %>% 
+          nrow()
         
         ## if no crossing is indicated and both before and after points were missing then we cannot tell if the animal crossed
         if (int.num == 0 & nrow(sf::st_coordinates(mov_seg_i)) != (nrow(encounter_i)+2)) {
@@ -207,13 +215,18 @@ BaBA <-
       if (duration > b_time) {
         
         ## first calculate number of crossings (without looking at extra points like we did for short encounter)
-        mov_seg_i <- sf::st_cast(dplyr::summarize(encounter_i, do_union = FALSE),
-                                 to = 'LINESTRING')
-        int.num <- nrow(
-          sf::st_coordinates(
-            sf::st_cast(
-              sf::st_intersection(mov_seg_i, barrier),
-              to = 'MULTIPOINT')))
+        mov_seg_i <- 
+          encounter_i %>% 
+          dplyr::summarize(do_union = FALSE) %>% 
+          sf::st_cast(to = 'LINESTRING')
+        
+        int.num <-
+          mov_seg_i %>% 
+          sf::st_intersection(barrier) %>% 
+          sf::st_cast(to = 'MULTIPOINT') %>% 
+          sf::st_coordinates() %>% 
+          nrow()
+        
         ## check if duration is smaller of bigger than p and classify accordingly
         if(duration > p_time) {
           classification <- "Trapped"
@@ -313,11 +326,11 @@ BaBA <-
         ## plot to check later
         if(export_images) {
           grDevices::png(paste0(img_path, "/",  event_df[i, ]$eventTYPE, "_", event_i$burstID, "_", img_suffix, ".png"), width = 6, height = 6, res = 96, units  = "in")
-          A <- sf::st_cast(
-            dplyr::summarize(
-              dplyr::group_by(animal_i, continuousID),
-              do_union = FALSE),
-            to = 'LINESTRING')
+          A <-
+            animal_i %>% 
+            dplyr::group_by(continuousID) %>% 
+            dplyr::summarize(do_union = FALSE) %>% 
+            sf::st_cast(to = 'LINESTRING')
           plot(sf::st_geometry(A), main = event_i$eventTYPE,
                sub = paste0("cross = ", event_i$cross, ", duration =", event_i$duration, ", stri =", round(straightness_i, 2), ", str_mean = ",  round(mean(straightnesses_i), 2), ", str_sd = ",  round(stats::sd(straightnesses_i), 2)))
           plot(sf::st_geometry(barrier_buffer), border = scales::alpha("red", 0.5), lty = "dashed", add = TRUE)
@@ -333,12 +346,13 @@ BaBA <-
     
     print("creating dataframe...")
     ## clean the encounter data
-    encounter_final <- encounter[!duplicated(encounter$burstID),]
-    encounter_final <- dplyr::left_join(encounter_final,
-                                        dplyr::select(event_df, c(burstID, eventTYPE)),
-                                        by = 'burstID')
-    encounter_final <- dplyr::select(encounter_final, c(Animal.ID, burstID, date, eventTYPE))
-    
+    encounter_final <- 
+      encounter %>% 
+      dplyr::filter(!duplicated(burstID)) %>% 
+      dplyr::left_join(event_df %>% 
+                         dplyr::select(burstID, eventTYPE),
+                       by = 'burstID') %>% 
+      dplyr::select(Animal.ID, burstID, date, eventTYPE)
     
     ## return output as a list
     return(list(encounters = encounter_final,
