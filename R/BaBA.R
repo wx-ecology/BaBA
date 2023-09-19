@@ -197,23 +197,16 @@ BaBA <-
           ## if there was not a crossing, classify as bounce, otherwise quick cross
           classification <- ifelse(int.num == 0, "Bounce", "Quick_Cross")
         }
-        
-        ## plot these examples to check later
-        if(export_images) {
-          grDevices::png(paste0(img_path, "/", classification, "_", i, "_", img_suffix, ".png"), width = 6, height = 6, units = "in", res = 90)
-          plot(mov_seg_i, main = classification, sub = paste("cross =", int.num, ", duration =", duration, units))
-          plot(barrier_buffer, border = scales::alpha("red", 0.5), lty = "dashed", add = T)
-          plot(sf::st_geometry(barrier), col = "red", lwd = 2, add = TRUE)
-          plot(sf::st_geometry(encounter_i), pch = 20, col = "cyan3", type = "o", lwd = 2, add = TRUE)
-          grDevices::dev.off()
-        }
       }
       
+      ## dummy variable to ensure desired plotting
+      tbd.plot <- 0
       
-      ### classify trapped events -------------------------------------------------
       
       if (duration > b_time) {
-        
+
+        ### classify trapped events -------------------------------------------------
+
         ## first calculate number of crossings (without looking at extra points like we did for short encounter)
         mov_seg_i <- 
           encounter_i %>% 
@@ -234,19 +227,87 @@ BaBA <-
           classification <- "TBD" ## these will be further classified in the next loop
         }
         
-        ## plot these encounters to check later
-        if (export_images & !classification %in% "TBD") {
-          grDevices::png(paste0(img_path, "/", classification, "_", i, "_", img_suffix, ".png"), width = 6, height = 6, units = "in", res = 90)
+        
+        ### classify back-n-forth and trace -----------------------------------------
+        
+        ## process the "TBD" event types as back-n-forth or trace
+        ## back-n-forth and trace are based on comparing average straightness around the encounter event
+        if(classification == 'TBD'){
+          
+          tbd.plot <- 1
+          
+          ## remove points that are inside the buffer if user said so
+          if (exclude_buffer) {
+            animal_i <- animal_i[!animal_i$ptsID %in% encounter$ptsID[encounter$Animal.ID == event_i$AnimalID], ]
+          }
+          
+          ## keep only data w/2 units before and w/2 after event
+          animal_i <- animal_i[animal_i$date >= start_time - as.difftime(w/2, units = units) & animal_i$date <= end_time +  as.difftime(w/2, units = units), ]
+          
+          ## identify continuous sections in the remaining movement data
+          animal_i$continuousID <- cumsum(abs(c(interval, round(diff(animal_i$date, units = units), digits = 1)) - interval)) # sep 11, 2020. added abs() to accomodate potential data points with smaller time intervals
+          
+          ## for each continuous sections, calculate straightness of all movements lasting the duration of our event (moving window of the size of the encounter)
+          straightnesses_i <- NULL
+          for(ii in unique(animal_i$continuousID)) {
+            animal_ii <- animal_i[animal_i$continuousID == ii, ]
+            
+            ## duration of period
+            duration_ii <- difftime(animal_ii$date[nrow(animal_ii)], animal_ii$date[1], units = units)
+            
+            ## calculate straightness only if at least as long as encounter event
+            if(duration_ii >= duration) {
+              for(iii in c(1: (which(animal_ii$date > (animal_ii$date[nrow(animal_ii)] - as.difftime(duration, units = units)))[1] -1))) {
+                mov_seg <- animal_ii[iii:(iii + duration/interval), ]
+                straightnesses_i <- c(straightnesses_i, strtns(mov_seg))
+              }
+            }
+          }
+          
+          ## make sure there are enough data to calculate average monthly straightness before and after the encounter event
+          ## (w/interval + 1) is the total possible segments if all data are present. 
+          ## We define "enough" as at least 1/4 of the total possible segments are present to calculate average straightness.
+          if (length(straightnesses_i) >= (w/interval + 1)/4) {
+            ## minimum max number possible/2 to calculate sd
+            upper <- mean(straightnesses_i) + sd_multiplier * stats::sd(straightnesses_i)
+            lower <- mean(straightnesses_i) - sd_multiplier * stats::sd(straightnesses_i)
+            if(straightness_i < lower) classification <- ifelse(int.num < max_cross, "Back_n_forth", "unknown")
+            if (straightness_i > upper) classification <- ifelse(int.num < max_cross, "Trace", "unknown")
+            if(straightness_i >= lower & straightness_i <= upper) classification <- "Average_Movement"
+          } else {
+            classification <- "unknown"
+            if(is.null(straightnesses_i)) {straightnesses_i <- NA} ## add this to avoid warning message when plotting
+          }
+        }
+      }
+      
+      
+      ### Consolidate outputs -----------------------------------------------------
+      
+      ## plot the encounters to check later, if desired
+      if (export_images) {
+        grDevices::png(paste0(img_path, "/", classification, "_", i, "_", img_suffix, ".png"), width = 6, height = 6, units = "in", res = 90)
+        if(tbd.plot == 0){
           plot(mov_seg_i, main = classification, sub = paste("cross =", int.num, ", duration =", duration, units))
           plot(barrier_buffer, border = scales::alpha("red", 0.5), lty = "dashed", add = T)
           plot(sf::st_geometry(barrier), col = 'red', lwd = 2, add = TRUE)
           plot(sf::st_geometry(encounter_i), pch = 20, col = "cyan3", type = "o", lwd = 2, add = TRUE)
-          grDevices::dev.off()
+        } else{
+          A <-
+            animal_i %>% 
+            dplyr::group_by(continuousID) %>% 
+            dplyr::summarize(do_union = FALSE) %>% 
+            sf::st_cast(to = 'LINESTRING')
+          plot(sf::st_geometry(A), main = classification,
+               sub = paste0("cross = ", int.num, ", duration =", duration, ", stri =", round(straightness_i, 2), ", str_mean = ",  round(mean(straightnesses_i), 2), ", str_sd = ",  round(stats::sd(straightnesses_i), 2)))
+          plot(sf::st_geometry(barrier_buffer), border = scales::alpha("red", 0.5), lty = "dashed", add = TRUE)
+          plot(sf::st_geometry(barrier), col = "red", lwd = 2, add = TRUE)
+          plot(sf::st_geometry(encounter_i), pch = 20, col = "cyan3", type = "o", lwd = 2, add = TRUE)
         }
+        grDevices::dev.off()
       }
       
-      ## save output
-      
+      ## combine output
       event_df <- rbind(event_df, data.frame(
         AnimalID = encounter_i$Animal.ID[1],
         burstID = i,
@@ -256,7 +317,7 @@ BaBA <-
         end_time,
         duration,
         cross = int.num,
-        straightness = ifelse(classification %in% c("Bounce", "Quick_Cross"), NA, straightness_i),
+        straightness = straightness_i,
         eventTYPE = classification,
         stringsAsFactors = F
       ))
@@ -264,83 +325,7 @@ BaBA <-
     
     ## close progress bar
     close(pb)
-    
-    
-    ### classify back-n-forth and trace -----------------------------------------
-    
-    ## process the "TBD" event types as back-n-forth or trace
-    ## back-n-forth and trace are based on comparing average straightness around the encounter event
-    for (i in 1:nrow(event_df)) {
-      if (event_df[i, ]$eventTYPE == "TBD") {
-        event_i <- event_df[i, ]
-        duration_i <- event_i$duration
-        straightness_i <- event_i$straightness
-        
-        ## get movement data of the individual of interest
-        animal_i <- animal[animal$Animal.ID == event_i$AnimalID, ]
-        encounter_i <- encounter[encounter$burstID %in% event_i$burstID,]
-        
-        ## remove points that are inside the buffer if user said so
-        if (exclude_buffer) {
-          animal_i <- animal_i[!animal_i$ptsID %in% encounter$ptsID[encounter$Animal.ID == event_i$AnimalID], ]
-        } 
-        
-        ## keep only data w/2 units before and w/2 after event
-        animal_i <- animal_i[animal_i$date >= event_i$start_time - as.difftime(w/2, units = units) & animal_i$date <= event_i$end_time +  as.difftime(w/2, units = units), ]
-        
-        ## identify continuous sections in the remaining movement data
-        animal_i$continuousID <- cumsum(abs(c(interval, round(diff(animal_i$date, units = units), digits = 1)) - interval)) # sep 11, 2020. added abs() to accomodate potential data points with smaller time intervals
-        
-        ## for each continuous sections, calculate straightness of all movements lasting the duration of our event (moving window of the size of the encounter)
-        straightnesses_i <- NULL
-        for(ii in unique(animal_i$continuousID)) {
-          animal_ii <- animal_i[animal_i$continuousID == ii, ]
-          
-          ## duration of period
-          duration_ii <- difftime(animal_ii$date[nrow(animal_ii)], animal_ii$date[1], units = units)
-          
-          ## calculate straightness only if at least as long as encounter event
-          if(duration_ii >= duration_i) {
-            for(iii in c(1: (which(animal_ii$date > (animal_ii$date[nrow(animal_ii)] - as.difftime(duration_i, units = units)))[1] -1))) {
-              mov_seg <- animal_ii[iii:(iii + duration_i/interval), ]
-              straightnesses_i <- c(straightnesses_i, strtns(mov_seg))
-            }
-          }
-        }
-        
-        ## make sure there are enough data to calculate average monthly straightness before and after the encounter event
-        ## (w/interval + 1) is the total possible segments if all data are present. 
-        ## We define "enough" as at least 1/4 of the total possible segments are present to calculate average straightness.
-        if (length(straightnesses_i) >= (w/interval + 1)/4) {
-          ## minimum max number possible/2 to calculate sd
-          upper <- mean(straightnesses_i) + sd_multiplier * stats::sd(straightnesses_i)
-          lower <- mean(straightnesses_i) - sd_multiplier * stats::sd(straightnesses_i)
-          if(straightness_i < lower) event_df[i, ]$eventTYPE <- ifelse(event_i$cross < max_cross, "Back_n_forth", "unknown")
-          if (straightness_i > upper) event_df[i, ]$eventTYPE <- ifelse(event_i$cross < max_cross, "Trace", "unknown")
-          if(straightness_i >= lower & event_i$straightness <= upper) event_df[i, ]$eventTYPE <- "Average_Movement"
-        } else {
-          event_df[i, ]$eventTYPE = "unknown"
-          if(is.null(straightnesses_i)) {straightnesses_i <- NA} ## add this to avoid warning message when plotting
-        }
-        
-        ## plot to check later
-        if(export_images) {
-          grDevices::png(paste0(img_path, "/",  event_df[i, ]$eventTYPE, "_", event_i$burstID, "_", img_suffix, ".png"), width = 6, height = 6, res = 96, units  = "in")
-          A <-
-            animal_i %>% 
-            dplyr::group_by(continuousID) %>% 
-            dplyr::summarize(do_union = FALSE) %>% 
-            sf::st_cast(to = 'LINESTRING')
-          plot(sf::st_geometry(A), main = event_i$eventTYPE,
-               sub = paste0("cross = ", event_i$cross, ", duration =", event_i$duration, ", stri =", round(straightness_i, 2), ", str_mean = ",  round(mean(straightnesses_i), 2), ", str_sd = ",  round(stats::sd(straightnesses_i), 2)))
-          plot(sf::st_geometry(barrier_buffer), border = scales::alpha("red", 0.5), lty = "dashed", add = TRUE)
-          plot(sf::st_geometry(barrier), col = "red", lwd = 2, add = TRUE)
-          plot(sf::st_geometry(encounter_i), pch = 20, col = "cyan3", type = "o", lwd = 2, add = TRUE)
-          grDevices::dev.off()
-        }
-      }
-    }
-    
+
     
     # finalize data -----------------------------------------------------------
     
