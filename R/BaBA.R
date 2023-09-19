@@ -238,7 +238,7 @@ BaBA <-
           
           ## remove points that are inside the buffer if user said so
           if (exclude_buffer) {
-            animal_i <- animal_i[!animal_i$ptsID %in% encounter$ptsID[encounter$Animal.ID == event_i$AnimalID], ]
+            animal_i <- animal_i[!animal_i$ptsID %in% encounter$ptsID[encounter$Animal.ID == animal_i$AnimalID[1]], ]
           }
           
           ## keep only data w/2 units before and w/2 after event
