@@ -215,6 +215,7 @@ BaBA <-
       if (duration > b_time) {
         
         ## first calculate number of crossings (without looking at extra points like we did for short encounter)
+<<<<<<< HEAD
         mov_seg_i <- 
           encounter_i %>% 
           dplyr::summarize(do_union = FALSE) %>% 
@@ -227,6 +228,25 @@ BaBA <-
           sf::st_coordinates() %>% 
           nrow()
         
+||||||| 8ab6136
+        mov_seg_i <- sf::st_cast(dplyr::summarize(encounter_i, do_union = FALSE),
+                                 to = 'LINESTRING')
+        int.num <- nrow(
+          sf::st_coordinates(
+            sf::st_cast(
+              sf::st_intersection(mov_seg_i, barrier),
+              to = 'MULTIPOINT')))
+=======
+        mov_seg_i <- sf::st_cast(dplyr::summarize(encounter_i, do_union = FALSE),
+                                 to = 'LINESTRING')
+        int.num <-
+          mov_seg_i %>% 
+          sf::st_intersection(barrier) %>% 
+          sf::st_cast(to = 'MULTIPOINT') %>% 
+          sf::st_coordinates() %>% 
+          nrow()
+        
+>>>>>>> ba1bd61de7fb42b3e30c4ee3a753e91fbe64ab3b
         ## check if duration is smaller of bigger than p and classify accordingly
         if(duration > p_time) {
           classification <- "Trapped"
