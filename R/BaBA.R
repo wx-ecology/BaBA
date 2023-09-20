@@ -271,8 +271,8 @@ BaBA <-
             ## minimum max number possible/2 to calculate sd
             upper <- mean(straightnesses_i) + sd_multiplier * stats::sd(straightnesses_i)
             lower <- mean(straightnesses_i) - sd_multiplier * stats::sd(straightnesses_i)
-            if(straightness_i < lower) classification <- ifelse(int.num < max_cross, "Back_n_forth", "unknown")
-            if (straightness_i > upper) classification <- ifelse(int.num < max_cross, "Trace", "unknown")
+            if(straightness_i < lower) classification <- ifelse(int.num <= max_cross, "Back_n_forth", "unknown")
+            if (straightness_i > upper) classification <- ifelse(int.num <= max_cross, "Trace", "unknown")
             if(straightness_i >= lower & straightness_i <= upper) classification <- "Average_Movement"
           } else {
             classification <- "unknown"
