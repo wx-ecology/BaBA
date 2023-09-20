@@ -81,12 +81,10 @@ BaBA <-
     
     ## create unique burstIDs
     for(i in unique(encounter$Animal.ID)){
-      
       if (nrow(encounter %>% dplyr::filter(Animal.ID == i)) == 0) {
         warning(paste0 ("Individual ", i, " has no locations overlapped with the barrier buffer and is eliminated from analysis." ))
         next()
       }
-      
       encounter_i <-
         encounter %>% 
         dplyr::filter(Animal.ID == i) %>% 
@@ -99,7 +97,6 @@ BaBA <-
       
       ## if any timediff2 is >= interval but <= tolerance, bring in the missing points from outside the buffer
       if(any(encounter_i$timediff2 >= interval & encounter_i$timediff2 <= tolerance, na.rm = T )) {
-        
         idx_pts_of_interest <- which(encounter_i$timediff2 >= interval & encounter_i$timediff2 <= tolerance)
         
         for(pt in idx_pts_of_interest) {
@@ -156,7 +153,6 @@ BaBA <-
     
     ## run classification procedure for each encounter
     for(i in unique(encounter$burstID)) {
-      
       ## update progressbar
       utils::setTxtProgressBar(pb, which(unique(encounter$burstID) == i)/length(unique(encounter$burstID)))
       
@@ -199,14 +195,13 @@ BaBA <-
         }
       }
       
-      ## dummy variable to ensure desired plotting
+      ## dummy variable to ensure desired plotting and output
       tbd.plot <- 0
       
-      
       if (duration > b_time) {
-
+        
         ### classify trapped events -------------------------------------------------
-
+        
         ## first calculate number of crossings (without looking at extra points like we did for short encounter)
         mov_seg_i <- 
           encounter_i %>% 
@@ -228,9 +223,9 @@ BaBA <-
         }
         
         
-        ### classify back-n-forth and trace -----------------------------------------
+        ### classify back-n-forth, trace, and average movement -----------------------------------------
         
-        ## process the "TBD" event types as back-n-forth or trace
+        ## process the "TBD" event types as back-n-forth, trace, or average movement
         ## back-n-forth and trace are based on comparing average straightness around the encounter event
         if(classification == 'TBD'){
           
@@ -238,7 +233,7 @@ BaBA <-
           
           ## remove points that are inside the buffer if user said so
           if (exclude_buffer) {
-            animal_i <- animal_i[!animal_i$ptsID %in% encounter$ptsID[encounter$Animal.ID == animal_i$AnimalID[1]], ]
+            animal_i <- animal_i[!animal_i$ptsID %in% encounter$ptsID[encounter$Animal.ID == animal_i$AnimalID], ]
           }
           
           ## keep only data w/2 units before and w/2 after event
@@ -288,7 +283,7 @@ BaBA <-
       if (export_images) {
         grDevices::png(paste0(img_path, "/", classification, "_", i, "_", img_suffix, ".png"), width = 6, height = 6, units = "in", res = 90)
         if(tbd.plot == 0){
-          plot(mov_seg_i, main = classification, sub = paste("cross =", int.num, ", duration =", duration, units))
+          plot(mov_seg_i, main = classification, sub = paste("cross =", int.num, ", duration =", round(duration, 0), units))
           plot(barrier_buffer, border = scales::alpha("red", 0.5), lty = "dashed", add = T)
           plot(sf::st_geometry(barrier), col = 'red', lwd = 2, add = TRUE)
           plot(sf::st_geometry(encounter_i), pch = 20, col = "cyan3", type = "o", lwd = 2, add = TRUE)
@@ -299,7 +294,7 @@ BaBA <-
             dplyr::summarize(do_union = FALSE) %>% 
             sf::st_cast(to = 'LINESTRING')
           plot(sf::st_geometry(A), main = classification,
-               sub = paste0("cross = ", int.num, ", duration =", duration, ", stri =", round(straightness_i, 2), ", str_mean = ",  round(mean(straightnesses_i), 2), ", str_sd = ",  round(stats::sd(straightnesses_i), 2)))
+               sub = paste0("cross = ", int.num, ", duration =", round(duration, 0), ", stri =", round(straightness_i, 2), ", str_mean = ",  round(mean(straightnesses_i), 2), ", str_sd = ",  round(stats::sd(straightnesses_i), 2)))
           plot(sf::st_geometry(barrier_buffer), border = scales::alpha("red", 0.5), lty = "dashed", add = TRUE)
           plot(sf::st_geometry(barrier), col = "red", lwd = 2, add = TRUE)
           plot(sf::st_geometry(encounter_i), pch = 20, col = "cyan3", type = "o", lwd = 2, add = TRUE)
@@ -317,7 +312,9 @@ BaBA <-
         end_time,
         duration,
         cross = int.num,
-        straightness = straightness_i,
+        str_i = straightness_i,
+        str_mean = ifelse(tbd.plot == 0, NA, mean(straightnesses_i)),
+        str_sd = ifelse(tbd.plot == 0, NA, stats::sd(straightnesses_i)),
         eventTYPE = classification,
         stringsAsFactors = F
       ))
@@ -325,7 +322,7 @@ BaBA <-
     
     ## close progress bar
     close(pb)
-
+    
     
     # finalize data -----------------------------------------------------------
     
