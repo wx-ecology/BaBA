@@ -259,7 +259,7 @@ BaBA <-
             }
           }
           
-          ## make sure there are enough data to calculate average monthly straightness before and after the encounter event
+          ## make sure there are enough data to calculate average straightness before and after the encounter event
           ## (w/interval + 1) is the total possible segments if all data are present. 
           ## We define "enough" as at least 1/4 of the total possible segments are present to calculate average straightness.
           if (length(straightnesses_i) >= (w/interval + 1)/4) {
@@ -291,6 +291,11 @@ BaBA <-
           A <-
             animal_i %>% 
             dplyr::group_by(continuousID) %>% 
+            ## Check sample size per group
+            dplyr::mutate(n = n()) %>%
+            ## Exclude groups with only a single point to avoid errors
+            dplyr::filter(n > 1) %>% 
+            ## Convert to a line
             dplyr::summarize(do_union = FALSE) %>% 
             sf::st_cast(to = 'LINESTRING')
           plot(sf::st_geometry(A), main = classification,
