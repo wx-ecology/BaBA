@@ -1,7 +1,7 @@
 Package: BaBA
 Type: Package
 Title: Barrier Behavior Analysis (BaBA)
-Version: 1.3
+Version: 2.0
 Author: Wenjing Xu and Valentine Herrmann
 Maintainer: The package maintainer <wenjing.xu@berkeley.edu> and <herrmannV@si.edu>
 Description: This package conducts barrier behavior analysis (BaBA) that identifies and classifies animal movement near linear barriers (e.g. fences, roads, railroads, pipelines, rivers, etc.) into one of the following categories: Bounce, Quick Cross, Back-and-forth, Trace, Trap, Average Movement and unknown. This information can be used to examine permeabilities of barriers to animal movement.
