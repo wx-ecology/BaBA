@@ -24,7 +24,7 @@ V1.1 (April 10, 2021)
 
 V2.0 (September 27, 2023) 
 1. Update package to run on sf instead of sp
-2. details (here)[https://github.com/wx-ecology/BaBA/pull/4#issue-1903676738]
+2. details [here](https://github.com/wx-ecology/BaBA/pull/4#issue-1903676738)
 
 ## Relevant publication: 
 Xu W, Dejid N, Herrmann V, Sawyer H, Middleton AD. Barrier Behaviour Analysis (BaBA) reveals extensive effects of fencing on wide-ranging ungulates. J Appl Ecol. 2020;00:1–9. https://doi.org/10.1111/1365-2664.13806
