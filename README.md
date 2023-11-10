@@ -12,6 +12,10 @@ To install the latest development version of BaBA, in an R session, type:
 ![BaBA workflow](Flowchart.png)
 
 ## Updates
+V2.0 (September 27, 2023) 
+1. Update package to run on sf instead of sp
+2. details [here](https://github.com/wx-ecology/BaBA/pull/4#issue-1903676738)
+
 V1.3 (Apr 14, 2023)
 1. Fixed bug related to "tolerance"
 
@@ -21,10 +25,6 @@ V1.2 (May 26, 2022)
 V1.1 (April 10, 2021)
 1. Improved the visualization of exported images 
 2. Added time unit option and unified all temporal parameter units
-
-V2.0 (September 27, 2023) 
-1. Update package to run on sf instead of sp
-2. details [here](https://github.com/wx-ecology/BaBA/pull/4#issue-1903676738)
 
 ## Relevant publication: 
 Xu W, Dejid N, Herrmann V, Sawyer H, Middleton AD. Barrier Behaviour Analysis (BaBA) reveals extensive effects of fencing on wide-ranging ungulates. J Appl Ecol. 2020;00:1–9. https://doi.org/10.1111/1365-2664.13806
