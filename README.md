@@ -12,6 +12,10 @@ To install the latest development version of BaBA, in an R session, type:
 ![BaBA workflow](Flowchart.png)
 
 ## Updates
+V2.1 (April 23, 2024)
+1. fixed issues related to straightness calculation that produces excessive "unknown" results
+2. fixed issues related to tolerance in the new sf-based function 
+
 V2.0 (September 27, 2023) 
 1. Update package to run on sf instead of sp
 2. details [here](https://github.com/wx-ecology/BaBA/pull/4#issue-1903676738)
