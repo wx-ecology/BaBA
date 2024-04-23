@@ -10,6 +10,7 @@
 # max_cross = 0
 # tolerance = 0
 # sd_multiplier = 1
+# round_fixes = T
 # exclude_buffer = F
 # export_images = F
 
@@ -118,7 +119,6 @@ BaBA <-
           else {
             fetched_pt$timediff <- NA
             fetched_pt$timediff2 <- 0 
-            fetched_pt$burstID <- encounter_i[encounter_i$ptsID == ptsID_of_interest_A,]$burstID
             ## reset timediff2 of pts_of_interests to 0
             encounter_i$timediff2[pt] <- 0 
             ## append fetched points to each other 
@@ -240,8 +240,7 @@ BaBA <-
           animal_i <- animal_i[animal_i$date >= start_time - as.difftime(w/2, units = units) & animal_i$date <= end_time +  as.difftime(w/2, units = units), ]
           
           ## identify continuous sections in the remaining movement data
-          animal_i$continuousID <- cumsum(abs(c(interval, round(diff(animal_i$date, units = units), digits = 1)) - interval)) # sep 11, 2020. added abs() to accomodate potential data points with smaller time intervals
-          
+          animal_i$continuousID <- cumsum(abs(c(interval, round(as.numeric(diff(animal_i$date), units = units), digits = 1) - interval))) # abs() is to accommodate potential data points with smaller time intervals
           ## for each continuous sections, calculate straightness of all movements lasting the duration of our event (moving window of the size of the encounter)
           straightnesses_i <- NULL
           for(ii in unique(animal_i$continuousID)) {
