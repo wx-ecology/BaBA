@@ -4,7 +4,7 @@ Title: Barrier Behavior Analysis (BaBA)
 Version: 2.1
 Authors@R: c(person("Wenjing", "Xu", role = c("aut", "cre"), email = "wenjingxu@umass.edu",
                      comment = c(ORCID = "0000-0001-5657-2364")),
-              person("Valentine", "Herrmann", role = c("aut", "cre"), email = "herrmannV@si.edu",
+              person("Valentine", "Herrmann", role = c("aut"), email = "herrmannV@si.edu",
                      comment = c(ORCID = "0000-0002-4519-481X")),
               person("Tim", "Fullman", role = "ctb")
               )
