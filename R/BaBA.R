@@ -299,7 +299,7 @@ BaBA <-
             animal_i %>% 
             dplyr::group_by(continuousID) %>% 
             ## Check sample size per group
-            dplyr::mutate(n = n()) %>%
+            dplyr::mutate(n = dplyr::n()) %>%
             ## Exclude groups with only a single point to avoid errors
             dplyr::filter(n > 1) %>% 
             ## Convert to a line
