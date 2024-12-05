@@ -282,14 +282,14 @@ BaBA <-
       if (export_images) {
         grDevices::png(paste0(img_path, "/", classification, "_", i, "_", img_suffix, ".png"), width = 6, height = 6, units = "in", res = 90)
         if(tbd.plot == 0){
-          bbox <- st_bbox(mov_seg_i)
+          bbox <- sf::st_bbox(mov_seg_i)
           expanded_bbox <- bbox
           expanded_bbox["xmin"] <- bbox["xmin"] - d*1.1
           expanded_bbox["xmax"] <- bbox["xmax"] + d*1.1
           expanded_bbox["ymin"] <- bbox["ymin"] - d*1.1
           expanded_bbox["ymax"] <- bbox["ymax"] + d*1.1
           
-          plot(st_as_sfc(expanded_bbox), col = "white", border = "white", main = classification, sub = paste("cross =", int.num, ", duration =", round(duration, 0), units))
+          plot(sf::st_as_sfc(expanded_bbox), col = "white", border = "white", main = classification, sub = paste("cross =", int.num, ", duration =", round(duration, 0), units))
           plot(mov_seg_i,add = T)
           plot(barrier_buffer, border = scales::alpha("red", 0.5), lty = "dashed", add = T)
           plot(sf::st_geometry(barrier), col = 'red', lwd = 2, add = TRUE)
