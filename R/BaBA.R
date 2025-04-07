@@ -130,6 +130,9 @@ BaBA <-
         encounter_i <- rbind(encounter_i, fetched_pts)
         ## recorder animal i's encounter event data.frame
         encounter_i <- encounter_i[order(encounter_i$ptsID), ]
+        
+        # reset fetched_pts for the next loop
+        fetched_pts <- fetched_pts[0,]
       }
       
       ## do the cumulative sum of the new data.frame based on timediff2, using that as the updated unique burst ID (with animalID) 
