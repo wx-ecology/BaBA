@@ -1,6 +1,6 @@
 # Barrier Behaviour Analysis
 
-![Version](https://img.shields.io/badge/version-2.2-blue)
+![Version](https://img.shields.io/badge/version-2.3-blue)
 
 ## Description
 Barrier Behaviour Analysis (BaBA) is a spatial- and temporal-explicit method to identify and classify barrier behaviors, fence behaviors in our case, based on GPS tracking data and linear spatial features. Barrier behaviors can be used to examine permeability of barriers for animal movement.
@@ -16,6 +16,9 @@ To install the latest development version of BaBA, in an R session, type:
 ![BaBA workflow](Flowchart.png)
 
 ## Updates
+V2.3 (Apr 7, 2025)
+1. fixed 'fetched pts' issue and ID mismatch (thank you A. Seveque!). 
+
 V2.2 (Dec 5, 2024)
 1. improved visuals of exported images for "bounce" and "quick cross".
 
@@ -37,8 +40,9 @@ V1.1 (April 10, 2021)
 1. Improved the visualization of exported images 
 2. Added time unit option and unified all temporal parameter units
 
-## Relevant publication: 
+## Relevant publication and example applications
 Xu W, Dejid N, Herrmann V, Sawyer H, Middleton AD. (2021). Barrier Behaviour Analysis (BaBA) reveals extensive effects of fencing on wide-ranging ungulates. Journal of Applied Ecology. 58(4), 690-698. https://doi.org/10.1111/1365-2664.13806
 
 Xu, W., Gigliotti, L. C., Royauté, R., Sawyer, H., & Middleton, A. D. (2023). Fencing amplifies individual differences in movement with implications on survival for two migratory ungulates. Journal of Animal Ecology, 92(3), 677-689. https://doi.org/10.1111/1365-2656.13879 
 
+Aikens, E. O., Merkle, J. A., Xu, W., & Sawyer, H. (2025). Pronghorn movements and mortality during extreme weather highlight the critical importance of connectivity. Current Biology.
