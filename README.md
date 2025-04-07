@@ -22,11 +22,11 @@ V2.3 (Apr 7, 2025)
 V2.2 (Dec 5, 2024)
 1. improved visuals of exported images for "bounce" and "quick cross".
 
-V2.1 (April 23, 2024)
+V2.1 (Apr 23, 2024)
 1. fixed issues related to straightness calculation that produces excessive "unknown" results
 2. fixed issues related to tolerance in the new sf-based function 
 
-V2.0 (September 27, 2023) 
+V2.0 (Sep 27, 2023) 
 1. Update package to run on sf instead of sp
 2. details [here](https://github.com/wx-ecology/BaBA/pull/4#issue-1903676738)
 
@@ -36,7 +36,7 @@ V1.3 (Apr 14, 2023)
 V1.2 (May 26, 2022)
 1. Solve encounters and classified encounters mismatch issue
 
-V1.1 (April 10, 2021)
+V1.1 (Apr 10, 2021)
 1. Improved the visualization of exported images 
 2. Added time unit option and unified all temporal parameter units
 
@@ -45,4 +45,4 @@ Xu W, Dejid N, Herrmann V, Sawyer H, Middleton AD. (2021). Barrier Behaviour Ana
 
 Xu, W., Gigliotti, L. C., Royauté, R., Sawyer, H., & Middleton, A. D. (2023). Fencing amplifies individual differences in movement with implications on survival for two migratory ungulates. Journal of Animal Ecology, 92(3), 677-689. https://doi.org/10.1111/1365-2656.13879 
 
-Aikens, E. O., Merkle, J. A., Xu, W., & Sawyer, H. (2025). Pronghorn movements and mortality during extreme weather highlight the critical importance of connectivity. Current Biology.
+Aikens, E. O., Merkle, J. A., Xu, W., & Sawyer, H. (2025). Pronghorn movements and mortality during extreme weather highlight the critical importance of connectivity. Current Biology.https://doi.org/10.1016/j.cub.2025.03.010 
