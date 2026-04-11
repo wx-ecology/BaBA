@@ -268,6 +268,10 @@ BaBA <-
           ## make sure there are enough data to calculate average straightness before and after the encounter event
           ## (w/interval + 1) is the total possible segments if all data are present. 
           ## We define "enough" as at least 1/4 of the total possible segments are present to calculate average straightness.
+          ## Also, make sure that straightnesses is of length enough for sd().
+          if (length(straightnesses_i) <= 1) {
+            warning("Not enough data within window to calculate straightness of track. Either make window w larger, or interval smaller.")
+          }
           if (length(straightnesses_i) >= (w/interval + 1)/4) {
             ## minimum max number possible/2 to calculate sd
             upper <- mean(straightnesses_i) + sd_multiplier * stats::sd(straightnesses_i)
