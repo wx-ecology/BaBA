@@ -76,7 +76,11 @@ BaBA <-
       sf::st_union()
     
     ## extract points that fall inside the buffer
-    encounter <- sf::st_intersection(animal, barrier_buffer)
+    # st_intersects() is a fast index-based function, so we first get the indices
+    #   of all points that fall within the buffer, then only keep those.
+    inx = sf::st_intersects(animal, barrier_buffer)
+    keep.inx = lapply(inx, length) %>% unlist() > 0
+    encounter <- animal[keep.inx,]
     
     if (nrow(encounter) == 0) stop("no barrier encounter detected.")
     
