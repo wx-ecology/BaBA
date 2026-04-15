@@ -6,12 +6,13 @@
 Barrier Behaviour Analysis (BaBA) is a spatial- and temporal-explicit method to identify and classify barrier behaviors, fence behaviors in our case, based on GPS tracking data and linear spatial features. Barrier behaviors can be used to examine permeability of barriers for animal movement.
 
 The 6 kinds of behaviors that BaBA classifies is: bounce, trace, back-n-forth, average movement, quick cross, trapped. See illustration:
-![BaBA catogory classes](BaBA_Catogories.png)
+<p align="center"> ![BaBA catogory classes](BaBA_Catogories.png) </p>
 
-To install the latest development version of BaBA, in an R session, type:  **devtools::install_github("wx-ecology/BaBA")**
+To install the latest development version of BaBA, in an R session, type:  
+<p align="center"> **devtools::install_github("wx-ecology/BaBA")** </p>
 
 ## BaBA Workflow
-![BaBA workflow](Flowchart.png)
+<p align="center"> ![BaBA workflow](Flowchart.png) </p>
 
 ## Updates
 v2.4 (Apr 15, 2026)
