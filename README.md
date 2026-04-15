@@ -11,10 +11,12 @@ The 6 kinds of behaviors that BaBA classifies is: bounce, trace, back-n-forth, a
 </p>
 
 To install the latest development version of BaBA, in an R session, type:  
-**devtools::install_github("wx-ecology/BaBA")**
+<p align="center"><strong><code>devtools::install_github("wx-ecology/BaBA")</code></strong></p>
 
 ## BaBA Workflow
-![BaBA workflow](Flowchart.png)
+<p align="center">
+  <img src="Flowchart.png" alt="BaBA workflow">
+</p>
 
 ## Updates
 v2.4 (Apr 15, 2026)
