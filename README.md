@@ -15,7 +15,7 @@ To install the latest development version of BaBA, in an R session, type:  **dev
 
 ## Updates
 v2.4 (Apr 15, 2026)
-1. updated efficiency locating points for encounter events (those fall within the barrier buffers) by using `st_intersects()` instead of `st_intersection()`.
+1. updated efficiency locating points for encounter events (those fall within the barrier buffers) by using `st_intersects()` instead of `st_intersection()`. Thank you M. Swift!
 
 V2.3 (Apr 7, 2025)
 1. fixed 'fetched pts' issue and ID mismatch (thank you A. Seveque!). 
@@ -28,7 +28,7 @@ V2.1 (Apr 23, 2024)
 2. fixed issues related to tolerance in the new sf-based function 
 
 V2.0 (Sep 27, 2023) 
-1. Update package to run on sf instead of sp
+1. Update package to run on sf instead of sp. Thank you T. Fullman! 
 2. details [here](https://github.com/wx-ecology/BaBA/pull/4#issue-1903676738)
 
 V1.3 (Apr 14, 2023)
