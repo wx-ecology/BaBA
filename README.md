@@ -1,6 +1,6 @@
 # Barrier Behaviour Analysis
 
-![Version](https://img.shields.io/badge/version-2.3-blue)
+![Version](https://img.shields.io/badge/version-2.4-blue)
 
 ## Description
 Barrier Behaviour Analysis (BaBA) is a spatial- and temporal-explicit method to identify and classify barrier behaviors, fence behaviors in our case, based on GPS tracking data and linear spatial features. Barrier behaviors can be used to examine permeability of barriers for animal movement.
@@ -16,6 +16,9 @@ To install the latest development version of BaBA, in an R session, type:
 ![BaBA workflow](Flowchart.png)
 
 ## Updates
+v2.4 (Apr 15, 2026)
+1. updated efficiency locating points for encounter events (those fall within the barrier buffers) by using `st_intersects()` instead of `st_intersection()`.
+
 V2.3 (Apr 7, 2025)
 1. fixed 'fetched pts' issue and ID mismatch (thank you A. Seveque!). 
 
